@@ -45,6 +45,7 @@ h1{font-family:var(--display);font-size:1.9rem;line-height:1;margin:0;letter-spa
 .refresh:disabled{opacity:.55;cursor:default}
 .refresh:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .status{margin:8px 0 0;font-size:.85rem;line-height:1.4;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.stats{margin:4px 0 0;font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .status.err{border-color:var(--live)}
 .search{position:relative;margin-top:12px}
 .search input{width:100%;box-sizing:border-box;font:500 1.05rem var(--body);padding:13px 44px 13px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--field);color:var(--fg)}
@@ -90,6 +91,7 @@ main{padding-inline:16px;padding-block:6px 40px}
   <header>
     <div class="top"><div class="brand"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#14181a"/><g transform="translate(8 10)"><path d="M0 4h44v24H0z" fill="#f5f5f0"/><path d="M0 4h11v8H0zM22 4h11v8H22zM11 12h11v8H11zM33 12h11v8H33zM0 20h11v8H0zM22 20h11v8H22z" fill="#14181a"/></g><ellipse cx="34" cy="40" rx="20" ry="11" transform="rotate(-18 34 40)" fill="#8b4a1f"/><path d="M26 40h16" stroke="#f5f5f0" stroke-width="2" transform="rotate(-18 34 40)"/><path d="M4 44h16M6 50h12M10 56h8" stroke="#e0352a" stroke-width="3" stroke-linecap="round"/></svg><h1>Game Finder</h1></div><span class="count" id="count"></span></div>
     <div class="upd"><span id="updated"></span><button class="refresh" id="refresh">↻ Get new games</button><button class="share" id="share" type="button" aria-label="Share this app">Share</button></div>
+    <p class="stats" id="stats" hidden></p>
     <p class="status" id="status" hidden></p>
     <div class="search">
       <input id="q" type="search" placeholder="Search a team, city or channel" autocomplete="off" enterkeyhint="search" aria-label="Search games">
@@ -211,6 +213,19 @@ $("share").addEventListener("click",async()=>{
   const hit=(p,t)=>{try{if(window.goatcounter&&window.goatcounter.count)window.goatcounter.count({path:p,title:t,event:true});else setTimeout(()=>hit(p,t),1500)}catch(e){}};
   window.addEventListener("appinstalled",()=>hit("app-installed","App installed"));
   try{if(matchMedia("(display-mode: standalone)").matches||navigator.standalone)hit("opened-from-home-screen","Opened from home screen")}catch(e){}
+})();
+
+// Small usage line in the header, read from GoatCounter's public counters
+(async()=>{
+  const base="https://gamefinder.goatcounter.com/counter/";
+  const get=async p=>{const r=await fetch(base+p+".json");if(!r.ok)throw 0;return r.json()};
+  try{
+    const [v,i]=await Promise.allSettled([get("TOTAL"),get("app-installed")]);
+    const bits=[];
+    if(v.status==="fulfilled"&&v.value&&v.value.count_unique)bits.push(v.value.count_unique+" visitors");
+    if(i.status==="fulfilled"&&i.value&&i.value.count)bits.push(i.value.count+" installs");
+    if(bits.length){$("stats").textContent=bits.join(" · ");$("stats").hidden=false}
+  }catch(e){}
 })();
 
 // Get new games: pulls the newest published copy of the app and reloads if the data is newer
