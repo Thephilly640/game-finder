@@ -317,11 +317,9 @@ rb.addEventListener("click",async()=>{
     if(!r.ok)throw new Error("HTTP "+r.status);
     const t=await r.text(),m=t.match(/^const UPDATED="([^"]*)";/m);
     if(!m)throw new Error("unreadable");
-    if(m[1]!==UPDATED){
-      try{const c=await caches.open("gf-v2");await c.delete(location.href);}catch(e){}
-      status("New games found ("+m[1]+"). Reloading…");setTimeout(()=>location.reload(),600);return;
-    }
-    status("You have the latest games. The schedule refreshes every morning around 8 AM ET.");
+    try{const c=await caches.open("gf-v2");await c.delete(location.href);}catch(e){}
+    status(m[1]!==UPDATED?"New games found ("+m[1]+"). Reloading…":"Refreshing…");
+    setTimeout(()=>location.reload(),500);return;
   }catch(e){
     status("Couldn't check right now. Make sure you have signal and try again.",true);
   }
