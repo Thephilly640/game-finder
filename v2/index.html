@@ -229,7 +229,8 @@ function render(){
     up.push(g);
   });
   fin.sort((x,y)=>x.start-y.start);
-  $("count").textContent=up.length+(up.length===1?" game":" games");
+  const rc=filter==="nascar"||filter==="f1",unit=rc?"race":"game";
+  $("count").textContent=up.length+" "+unit+(up.length===1?"":"s");
   let html="";
   if(!up.length&&!fin.length){
     html=filter==="mine"&&!mine.size
@@ -238,7 +239,7 @@ function render(){
   }else{
     html=(fin.length?`<h3 class="resh">Finished games</h3>`+days(fin,now,words,false):"")
       +`<div id="upnext"></div>`
-      +(up.length?days(up,now,words,false):`<div class="nomatch">No upcoming games match.</div>`);
+      +(up.length?days(up,now,words,false):`<div class="nomatch">No upcoming ${unit}s match.</div>`);
   }
   $("list").innerHTML=html;
   if(anchorPending){anchorPending=false;goUpcoming()}
