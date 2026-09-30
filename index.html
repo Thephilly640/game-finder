@@ -88,7 +88,7 @@ main{padding-inline:16px;padding-block:6px 40px}
 <div class="app">
   <header>
     <div class="top"><div class="brand"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#14181a"/><g transform="translate(8 10)"><path d="M0 4h44v24H0z" fill="#f5f5f0"/><path d="M0 4h11v8H0zM22 4h11v8H22zM11 12h11v8H11zM33 12h11v8H33zM0 20h11v8H0zM22 20h11v8H22z" fill="#14181a"/></g><ellipse cx="34" cy="40" rx="20" ry="11" transform="rotate(-18 34 40)" fill="#8b4a1f"/><path d="M26 40h16" stroke="#f5f5f0" stroke-width="2" transform="rotate(-18 34 40)"/><path d="M4 44h16M6 50h12M10 56h8" stroke="#e0352a" stroke-width="3" stroke-linecap="round"/></svg><h1>Game Finder</h1></div><span class="count" id="count"></span></div>
-    <div class="upd"><span id="updated"></span><button class="refresh" id="refresh" hidden>↻ Get new games</button><button class="share" id="share" type="button" aria-label="Share this app">Share</button></div>
+    <div class="upd"><span id="updated"></span><button class="refresh" id="refresh">↻ Get new games</button><button class="share" id="share" type="button" aria-label="Share this app">Share</button></div>
     <p class="status" id="status" hidden></p>
     <div class="search">
       <input id="q" type="search" placeholder="Search a team, city or channel" autocomplete="off" enterkeyhint="search" aria-label="Search games">
@@ -116,7 +116,6 @@ const G=[["2026-10-01T20:00:00-04:00",210,"ncaa","WKU at New Mexico State","","C
 const UPDATED="Sep 30, 2026 2:22 PM ET";
 const R={"nfl":{"Bears":["2-1",null],"Bengals":["2-1",null],"Bills":["3-0",null],"Broncos":["2-1",null],"Browns":["2-1",null],"Buccaneers":["0-3",null],"Cardinals":["1-2",null],"Chargers":["0-3",null],"Chiefs":["3-0",null],"Colts":["1-2",null],"Commanders":["1-2",null],"Cowboys":["1-2",null],"Dolphins":["0-3",null],"Eagles":["2-1",null],"Falcons":["1-2",null],"49ers":["3-0",null],"Giants":["2-1",null],"Jaguars":["2-1",null],"Jets":["1-2",null],"Lions":["2-1",null],"Packers":["1-2",null],"Panthers":["1-2",null],"Patriots":["1-2",null],"Raiders":["3-0",null],"Rams":["1-2",null],"Ravens":["2-1",null],"Saints":["1-2",null],"Seahawks":["2-1",null],"Steelers":["2-1",null],"Texans":["0-3",null],"Titans":["0-3",null],"Vikings":["3-0",null]},"ncaa":{"Air Force":["2-1",null],"Alabama":["4-0",7],"Appalachian State":["3-1",null],"Arizona":["3-1",null],"Arizona State":["2-1",null],"Arkansas":["2-2",null],"Arkansas State":["2-2",null],"Army":["2-1",null],"Auburn":["3-1",null],"BYU":["3-0",10],"Ball State":["1-3",null],"Baylor":["3-1",null],"Boise State":["3-1",22],"Boston College":["2-2",null],"California":["2-2",null],"Cincinnati":["4-0",null],"Clemson":["3-1",null],"Coastal Carolina":["1-3",null],"Colorado":["2-2",null],"Colorado State":["2-2",null],"Delaware":["2-2",null],"Duke":["4-0",null],"FAU":["3-1",null],"FIU":["2-2",null],"Florida":["4-0",8],"Florida State":["2-2",null],"Fresno State":["3-1",null],"Georgia":["4-0",2],"Georgia Southern":["1-3",null],"Georgia Tech":["1-3",null],"Hawai'i":["1-3",null],"Houston":["3-1",20],"Illinois":["2-2",null],"Indiana":["4-0",6],"Iowa":["4-0",14],"Iowa State":["2-2",null],"Jacksonville State":["3-2",null],"James Madison":["4-0",null],"Kansas":["1-2",null],"Kansas State":["3-1",null],"Kennesaw State":["1-3",null],"Kentucky":["3-1",24],"LSU":["3-1",11],"Liberty":["3-1",null],"Louisville":["2-2",null],"Marshall":["3-1",null],"Maryland":["2-2",null],"McNeese":["2-3",null],"Memphis":["3-1",null],"Miami":["4-0",4],"Michigan":["3-1",null],"Michigan State":["2-2",null],"Middle Tennessee":["2-2",null],"Minnesota":["3-1",null],"Mississippi State":["4-0",16],"Missouri":["3-1",25],"Missouri State":["1-3",null],"NC State":["2-2",null],"Navy":["1-2",null],"Nebraska":["4-0",null],"New Mexico State":["1-3",null],"North Carolina":["2-1",null],"North Dakota State":["4-0",null],"North Texas":["2-2",null],"Northern Illinois":["0-4",null],"Northwestern":["2-1",null],"Notre Dame":["4-0",3],"Ohio State":["3-1",5],"Oklahoma":["2-2",null],"Oklahoma State":["3-1",19],"Ole Miss":["3-1",9],"Oregon":["3-1",15],"Oregon State":["2-2",null],"Penn State":["3-1",null],"Pitt":["4-0",null],"Purdue":["1-3",null],"Rutgers":["1-3",null],"SMU":["3-1",21],"Sam Houston":["1-3",null],"San Diego State":["1-3",null],"San Jose State":["2-2",null],"South Alabama":["2-2",null],"South Carolina":["2-2",null],"Southern Miss":["1-3",null],"Stanford":["2-2",null],"Syracuse":["1-2",null],"TCU":["2-2",null],"Temple":["1-3",null],"Tennessee":["3-1",17],"Texas":["4-0",1],"Texas A&M":["2-2",null],"Texas State":["2-2",null],"Texas Tech":["4-0",12],"Troy":["2-2",null],"Tulane":["2-2",null],"Tulsa":["3-1",null],"UAB":["2-2",null],"UCF":["3-1",null],"UCLA":["4-0",23],"UConn":["2-2",null],"UNLV":["2-2",null],"USC":["4-1",18],"USF":["4-0",null],"UTSA":["3-1",null],"Utah":["4-0",13],"Utah State":["1-3",null],"Vanderbilt":["3-1",null],"Virginia":["3-1",null],"Virginia Tech":["4-0",null],"WKU":["1-3",null],"Wake Forest":["3-1",null],"Washington":["3-1",null],"Washington State":["1-3",null],"West Virginia":["3-1",null],"Wisconsin":["3-1",null],"Wyoming":["2-2",null]}};
 const R_ASOF="NFL records after Week 3, AP poll of Sep 27, 2026";
-const TRIGGER="trig_01R79o6YTtr6TwwWDK3aiVg8";
 const LEAGUE={nfl:"NFL",ncaa:"College",nascar:"NASCAR",f1:"F1"};
 // NFL nickname -> city, so "Cleveland" finds the Browns
 const CITY={"Bears":"Chicago","Bengals":"Cincinnati","Bills":"Buffalo","Broncos":"Denver","Browns":"Cleveland","Buccaneers":"Tampa Bay Bucs","Cardinals":"Arizona","Chargers":"Los Angeles LA","Chiefs":"Kansas City KC","Colts":"Indianapolis Indy","Commanders":"Washington","Cowboys":"Dallas","Dolphins":"Miami","Eagles":"Philadelphia Philly","Falcons":"Atlanta","49ers":"San Francisco Niners SF","Giants":"New York NY","Jaguars":"Jacksonville Jags","Jets":"New York NY","Lions":"Detroit","Packers":"Green Bay","Panthers":"Carolina","Patriots":"New England Pats","Raiders":"Las Vegas","Rams":"Los Angeles LA","Ravens":"Baltimore","Saints":"New Orleans","Seahawks":"Seattle","Steelers":"Pittsburgh","Texans":"Houston","Titans":"Tennessee","Vikings":"Minnesota"};
@@ -205,43 +204,27 @@ $("share").addEventListener("click",async()=>{
   catch(e){window.prompt("Copy this link:",url)}
 });
 
-// Refresh: starts a background Claude run that looks up new games, then republishes this app (open copies reload by themselves)
-$("asof").textContent=R_ASOF;
-$("updated").textContent="Games updated "+UPDATED;
-const RUN_MIN=20;
+// Get new games: pulls the newest published copy of the app and reloads if the data is newer
+$("updated").textContent="Updated "+UPDATED.replace(/, \d{4}/,"");
 function status(msg,err){const s=$("status");s.hidden=!msg;s.textContent=msg||"";s.className="status"+(err?" err":"")}
-function checkPending(){
-  let t=0;try{t=+localStorage.getItem("refreshAt:"+UPDATED)||0}catch(e){}
-  const left=RUN_MIN-(Date.now()-t)/60000;
-  if(t&&left>0){$("refresh").disabled=true;$("refresh").textContent="↻ Updating…";
-    status("Looking up new games now. This usually takes 10 to 20 minutes. The app reloads by itself when the new games are in.");return true}
-  $("refresh").disabled=false;$("refresh").textContent="↻ Get new games";return false;
-}
-(async()=>{
-  const mcp=await window.claude?.use?.("mcp").catch(()=>null);
-  if(!mcp)return; // no refresh from this view; the list still works
-  $("refresh").hidden=false;
-  if(!checkPending())status("");
-  $("refresh").addEventListener("click",async()=>{
-    if(checkPending())return;
-    const b=$("refresh");b.disabled=true;b.textContent="↻ Starting…";status("");
-    try{
-      await mcp.callTool("Claude Code Remote","fire_trigger",{trigger_id:TRIGGER},{cache:false});
-      try{localStorage.setItem("refreshAt:"+UPDATED,String(Date.now()))}catch(e){}
-      checkPending();
-    }catch(e){
-      b.disabled=false;b.textContent="↻ Get new games";
-      const c=e&&e.code;
-      if(c==="not_in_manifest")status("Refresh isn't allowed for this page. Tap the button again and choose Allow when Claude asks.",true);
-      else if(c==="needs_reauth")status("Your Claude Code Remote connection needs to be reconnected in claude.ai Settings → Connectors.",true);
-      else if(c==="server_not_connected"||c==="selection_required")status("Refresh only works when you're signed in to Claude as the owner of this app.",true);
-      else if(c==="tool_error")status("The update job couldn't start: "+(e.message||"unknown reason")+". Ask Claude in chat to refresh the games.",true);
-      else if(c==="server_unavailable")status("Couldn't reach Claude just now. Wait a minute and tap again.",true);
-      else status("Couldn't start the update. Wait a minute and tap again, or ask Claude in chat.",true);
+const rb=$("refresh");rb.hidden=false;
+rb.addEventListener("click",async()=>{
+  rb.disabled=true;rb.textContent="↻ Checking…";status("");
+  try{
+    const r=await fetch(location.pathname+"?nocache="+Date.now(),{cache:"no-store"});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const t=await r.text(),m=t.match(/^const UPDATED="([^"]*)";/m);
+    if(!m)throw new Error("unreadable");
+    if(m[1]!==UPDATED){
+      try{const c=await caches.open("gf-v2");await c.delete(location.href);}catch(e){}
+      status("New games found ("+m[1]+"). Reloading…");setTimeout(()=>location.reload(),600);return;
     }
-  });
-  setInterval(checkPending,60000);
-})();
+    status("You have the latest games. The schedule refreshes every morning around 5 AM ET.");
+  }catch(e){
+    status("Couldn't check right now. Make sure you have signal and try again.",true);
+  }
+  rb.disabled=false;rb.textContent="↻ Get new games";
+});
 </script>
 </body>
 </html>
