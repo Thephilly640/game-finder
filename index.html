@@ -34,6 +34,9 @@ header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:8px;ba
 .brand svg{width:34px;height:34px;flex:none}
 h1{font-style:italic;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;font-size:1.6rem}
 .count{white-space:nowrap}
+.share{flex:none;font:700 .8rem var(--body);border:1.5px solid var(--accent);color:var(--accent);background:var(--card);border-radius:999px;padding:6px 12px;cursor:pointer;margin-left:auto}
+.share:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
 .top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
 h1{font-family:var(--display);font-size:1.9rem;line-height:1;margin:0;letter-spacing:.01em}
 .count{color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums}
@@ -85,7 +88,7 @@ main{padding-inline:16px;padding-block:6px 40px}
 <div class="app">
   <header>
     <div class="top"><div class="brand"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#14181a"/><g transform="translate(8 10)"><path d="M0 4h44v24H0z" fill="#f5f5f0"/><path d="M0 4h11v8H0zM22 4h11v8H22zM11 12h11v8H11zM33 12h11v8H33zM0 20h11v8H0zM22 20h11v8H22z" fill="#14181a"/></g><ellipse cx="34" cy="40" rx="20" ry="11" transform="rotate(-18 34 40)" fill="#8b4a1f"/><path d="M26 40h16" stroke="#f5f5f0" stroke-width="2" transform="rotate(-18 34 40)"/><path d="M4 44h16M6 50h12M10 56h8" stroke="#e0352a" stroke-width="3" stroke-linecap="round"/></svg><h1>Game Finder</h1></div><span class="count" id="count"></span></div>
-    <div class="upd"><span id="updated"></span><button class="refresh" id="refresh" hidden>↻ Get new games</button></div>
+    <div class="upd"><span id="updated"></span><button class="refresh" id="refresh" hidden>↻ Get new games</button><button class="share" id="share" type="button" aria-label="Share this app">Share</button></div>
     <p class="status" id="status" hidden></p>
     <div class="search">
       <input id="q" type="search" placeholder="Search a team, city or channel" autocomplete="off" enterkeyhint="search" aria-label="Search games">
@@ -192,6 +195,15 @@ $("clear").addEventListener("click",()=>{$("q").value="";$("q").focus();render()
 $("past").addEventListener("click",()=>{showPast=!showPast;render()});
 document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x.dataset.f===filter));
 render();setInterval(render,60000);
+
+
+// Share button: native share sheet when available, otherwise copy the link
+$("share").addEventListener("click",async()=>{
+  const url=location.origin+location.pathname,b=$("share");
+  try{if(navigator.share){await navigator.share({title:"Game Finder",text:"NFL, college football, NASCAR and F1 times and channels",url});return}}catch(e){if(e&&e.name==="AbortError")return}
+  try{await navigator.clipboard.writeText(url);b.textContent="Link copied";setTimeout(()=>b.textContent="Share",2000)}
+  catch(e){window.prompt("Copy this link:",url)}
+});
 
 // Refresh: starts a background Claude run that looks up new games, then republishes this app (open copies reload by themselves)
 $("asof").textContent=R_ASOF;
