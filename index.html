@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Game Finder</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#14181a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180-v2.png">
+<meta name="apple-mobile-web-app-title" content="Games">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one-screen phone app — sticky header (title, search, series chips), scrolling day-grouped game list */
+:root{
+  --bg:#eef1ef;--card:#ffffff;--fg:#161a18;--muted:#5b6560;--line:#d9dfdb;--field:#ffffff;
+  --accent:#c8281c;--star:#d99a0b;--live:#c72e2e;
+  --nascar:#c9361f;--f1:#1d5fb8;--nfl:#1f6f4a;--ncaa:#8a5a12;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;--body:"Barlow",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121615;--card:#1b201e;--fg:#e9eeeb;--muted:#99a39e;--line:#2b322f;--field:#232927;
+  --accent:#ff6a55;--star:#f2c14e;--live:#ff6b6b;
+  --nascar:#ff7a63;--f1:#78aef5;--nfl:#6fd09c;--ncaa:#e6b25f;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121615;--card:#1b201e;--fg:#e9eeeb;--muted:#99a39e;--line:#2b322f;--field:#232927;
+  --accent:#ff6a55;--star:#f2c14e;--live:#ff6b6b;
+  --nascar:#ff7a63;--f1:#78aef5;--nfl:#6fd09c;--ncaa:#e6b25f;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.35;-webkit-tap-highlight-color:transparent}
+.app{max-width:560px;margin:0 auto}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-inline:16px;padding-block:14px 16px;border-bottom:0}
+header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:8px;background:repeating-conic-gradient(var(--fg) 0 25%,var(--bg) 0 50%) 0 0/16px 16px;opacity:.85}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:34px;height:34px;flex:none}
+h1{font-style:italic;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;font-size:1.6rem}
+.count{white-space:nowrap}
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-size:1.9rem;line-height:1;margin:0;letter-spacing:.01em}
+.count{color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums}
+.upd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;font-size:.8rem;color:var(--muted)}
+.refresh{flex:none;font:700 .85rem var(--body);border:1.5px solid var(--accent);color:var(--accent);background:var(--card);border-radius:999px;padding:7px 12px;cursor:pointer}
+.refresh:disabled{opacity:.55;cursor:default}
+.refresh:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.status{margin:8px 0 0;font-size:.85rem;line-height:1.4;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.status.err{border-color:var(--live)}
+.search{position:relative;margin-top:12px}
+.search input{width:100%;box-sizing:border-box;font:500 1.05rem var(--body);padding:13px 44px 13px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--field);color:var(--fg)}
+.search input:focus{outline:none;border-color:var(--accent)}
+.clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);font-size:1.4rem;width:36px;height:36px;border-radius:50%;cursor:pointer}
+.chips{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font:700 .8rem var(--body);letter-spacing:.05em;text-transform:uppercase;border:1.5px solid var(--line);background:var(--card);color:var(--fg);padding:8px 13px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip:focus-visible,.star:focus-visible,.clear:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding-inline:16px;padding-block:6px 40px}
+.day h2{font-family:var(--display);font-size:1.1rem;text-transform:uppercase;letter-spacing:.07em;margin:18px 0 8px;color:var(--muted)}
+.day h2 b{color:var(--fg)}
+.list{display:grid;gap:8px}
+.game{display:grid;grid-template-columns:4px 1fr auto;gap:0 12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 8px 12px 0;overflow:hidden}
+.bar{align-self:stretch;border-radius:0 3px 3px 0;margin:-12px 0}
+.bar.nascar{background:var(--nascar)}.bar.f1{background:var(--f1)}.bar.nfl{background:var(--nfl)}.bar.ncaa{background:var(--ncaa)}
+.info{min-width:0}
+.meta{display:flex;gap:8px;align-items:center;font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meta .t{font-weight:700;color:var(--fg);font-size:.9rem}
+.lg{font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:.7rem}
+.lg.nascar{color:var(--nascar)}.lg.f1{color:var(--f1)}.lg.nfl{color:var(--nfl)}.lg.ncaa{color:var(--ncaa)}
+.live{background:var(--live);color:#fff;font-weight:700;font-size:.66rem;letter-spacing:.08em;padding:2px 6px;border-radius:4px}
+.ev{font-weight:700;font-size:1.05rem;margin-top:2px;overflow-wrap:anywhere}
+.ev mark{background:none;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.note{font-size:.82rem;color:var(--muted);margin-top:1px}
+.net{display:inline-block;margin-top:6px;font-weight:600;font-size:.85rem;border:1px solid var(--line);border-radius:6px;padding:2px 8px}
+.star{border:0;background:none;font-size:1.5rem;line-height:1;width:44px;height:44px;border-radius:50%;cursor:pointer;color:var(--line)}
+.star[aria-pressed="true"]{color:var(--star)}
+.tm{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tb{border:1px solid var(--line);background:none;color:var(--fg);font:inherit;font-size:.82rem;font-weight:600;border-radius:999px;padding:6px 12px;min-height:36px;cursor:pointer}
+.tb[aria-pressed="true"]{border-color:var(--star);background:color-mix(in srgb,var(--star) 18%,transparent)}
+.tb::before{content:"☆ "}.tb[aria-pressed="true"]::before{content:"★ ";color:var(--star)}
+.tb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.empty{text-align:center;color:var(--muted);padding:48px 12px}
+.empty b{display:block;color:var(--fg);font-size:1.1rem;margin-bottom:6px}
+.foot{color:var(--muted);font-size:.8rem;margin-top:28px;line-height:1.5}
+.pastbtn{display:block;margin:14px auto 0;font:600 .85rem var(--body);background:none;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:8px 14px;cursor:pointer}
+</style>
+</head><body>
+<div class="app">
+  <header>
+    <div class="top"><div class="brand"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#14181a"/><g transform="translate(8 10)"><path d="M0 4h44v24H0z" fill="#f5f5f0"/><path d="M0 4h11v8H0zM22 4h11v8H22zM11 12h11v8H11zM33 12h11v8H33zM0 20h11v8H0zM22 20h11v8H22z" fill="#14181a"/></g><ellipse cx="34" cy="40" rx="20" ry="11" transform="rotate(-18 34 40)" fill="#8b4a1f"/><path d="M26 40h16" stroke="#f5f5f0" stroke-width="2" transform="rotate(-18 34 40)"/><path d="M4 44h16M6 50h12M10 56h8" stroke="#e0352a" stroke-width="3" stroke-linecap="round"/></svg><h1>Game Finder</h1></div><span class="count" id="count"></span></div>
+    <div class="upd"><span id="updated"></span><button class="refresh" id="refresh" hidden>↻ Get new games</button></div>
+    <p class="status" id="status" hidden></p>
+    <div class="search">
+      <input id="q" type="search" placeholder="Search a team, city or channel" autocomplete="off" enterkeyhint="search" aria-label="Search games">
+      <button class="clear" id="clear" aria-label="Clear search" hidden>×</button>
+    </div>
+    <div class="chips" role="group" aria-label="Filter">
+      <button class="chip" id="c-all" data-f="all" aria-pressed="true">All</button>
+      <button class="chip" id="c-mine" data-f="mine" aria-pressed="false">★ My teams</button>
+      <button class="chip" id="c-nfl" data-f="nfl" aria-pressed="false">NFL</button>
+      <button class="chip" id="c-ncaa" data-f="ncaa" aria-pressed="false">College</button>
+      <button class="chip" id="c-nascar" data-f="nascar" aria-pressed="false">NASCAR</button>
+      <button class="chip" id="c-f1" data-f="f1" aria-pressed="false">F1</button>
+    </div>
+  </header>
+  <main>
+    <div id="list"></div>
+    <button class="pastbtn" id="past"></button>
+    <p class="foot">All times Eastern. Sunday afternoon CBS and FOX games vary by area. College games for Oct 15–17 and Oct 22–24 aren't scheduled yet. Tap a team name under a game to save just that team to My teams. Records and rankings: <span id="asof"></span>.</p>
+  </main>
+</div>
+
+<script>
+try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
+const G=[["2026-10-01T20:00:00-04:00",210,"ncaa","WKU at New Mexico State","","CBS Sports Network"],["2026-10-01T20:15:00-04:00",195,"nfl","Steelers at Browns","Thursday Night Football","Prime Video"],["2026-10-01T21:00:00-04:00",210,"ncaa","North Texas at Tulsa","","ESPN"],["2026-10-02T19:00:00-04:00",210,"ncaa","Pitt at Virginia Tech","","ESPN"],["2026-10-02T19:00:00-04:00",210,"ncaa","Liberty at Delaware","","CBS Sports Network"],["2026-10-02T20:00:00-04:00",210,"ncaa","Penn State at Northwestern","","FOX"],["2026-10-03T12:00:00-04:00",210,"ncaa","Alabama at Mississippi State","","ABC"],["2026-10-03T12:00:00-04:00",210,"ncaa","Notre Dame at North Carolina","","ESPN"],["2026-10-03T12:00:00-04:00",210,"ncaa","Michigan at Minnesota","","FOX"],["2026-10-03T12:00:00-04:00",210,"ncaa","Navy at Air Force","","CBS / Paramount+"],["2026-10-03T12:00:00-04:00",210,"ncaa","UCF at Houston","","ESPN2"],["2026-10-03T12:00:00-04:00",210,"ncaa","West Virginia at Iowa State","","TNT / truTV"],["2026-10-03T12:00:00-04:00",210,"ncaa","Boston College at SMU","","The CW"],["2026-10-03T12:00:00-04:00",210,"ncaa","Stanford at Wake Forest","","ACC Network"],["2026-10-03T12:00:00-04:00",210,"ncaa","Syracuse at UConn","","CBS Sports Network"],["2026-10-03T12:00:00-04:00",210,"ncaa","Middle Tennessee at Kansas","","ESPNU"],["2026-10-03T12:30:00-04:00",210,"ncaa","Michigan State at Wisconsin","","Big Ten Network"],["2026-10-03T12:45:00-04:00",210,"ncaa","Vanderbilt at Georgia","","SEC Network"],["2026-10-03T15:30:00-04:00",210,"ncaa","Ohio State at Iowa","","CBS / Paramount+"],["2026-10-03T15:30:00-04:00",210,"ncaa","Auburn at Tennessee","","ESPN"],["2026-10-03T15:30:00-04:00",210,"ncaa","Florida at Missouri","","ABC"],["2026-10-03T15:30:00-04:00",210,"ncaa","Virginia at Florida State","","ESPN2"],["2026-10-03T15:30:00-04:00",210,"ncaa","Louisville at NC State","","ACC Network"],["2026-10-03T15:30:00-04:00",210,"ncaa","California at UNLV","","CBS Sports Network"],["2026-10-03T15:30:00-04:00",210,"ncaa","Wyoming at North Dakota State","","The CW"],["2026-10-03T15:45:00-04:00",210,"ncaa","Marshall at James Madison","","ESPNU"],["2026-10-03T16:00:00-04:00",210,"ncaa","Maryland at Nebraska","","FS1"],["2026-10-03T16:15:00-04:00",210,"ncaa","Purdue at Illinois","","Big Ten Network"],["2026-10-03T16:15:00-04:00",210,"ncaa","Kentucky at South Carolina","","SEC Network"],["2026-10-03T18:00:00-04:00",210,"ncaa","Oregon State at Colorado State","","USA Network"],["2026-10-03T19:00:00-04:00",210,"ncaa","BYU at TCU","","ESPN"],["2026-10-03T19:00:00-04:00",210,"ncaa","Arkansas at Texas A&M","","ESPN2"],["2026-10-03T19:30:00-04:00",210,"ncaa","Miami at Clemson","","ABC"],["2026-10-03T19:30:00-04:00",210,"ncaa","Washington at USC","","NBC / Peacock"],["2026-10-03T19:30:00-04:00",210,"ncaa","Texas Tech at Colorado","","FOX"],["2026-10-03T19:30:00-04:00",210,"ncaa","Utah State at Boise State","","CBS Sports Network"],["2026-10-03T19:30:00-04:00",210,"ncaa","Temple at USF","","ESPNU"],["2026-10-03T19:45:00-04:00",210,"ncaa","McNeese at LSU","","SEC Network"],["2026-10-03T20:00:00-04:00",210,"ncaa","Indiana at Rutgers","","Big Ten Network"],["2026-10-03T21:30:00-04:00",210,"ncaa","Fresno State at Washington State","","USA Network"],["2026-10-03T22:30:00-04:00",210,"ncaa","Baylor at Arizona State","","ESPN"],["2026-10-03T22:30:00-04:00",210,"ncaa","Texas State at San Diego State","","The CW"],["2026-10-03T23:00:00-04:00",210,"ncaa","Cincinnati at Arizona","","FOX"],["2026-10-04T03:00:00-04:00",120,"f1","Bahrain Grand Prix (in Malaysia)","Sepang \u00b7 moved from Bahrain","Apple TV"],["2026-10-04T09:30:00-04:00",195,"nfl","Colts vs. Commanders","London","NFL Network"],["2026-10-04T13:00:00-04:00",195,"nfl","Titans at Ravens","","CBS"],["2026-10-04T13:00:00-04:00",195,"nfl","Cardinals at Giants","","CBS"],["2026-10-04T13:00:00-04:00",195,"nfl","Jaguars at Bengals","","CBS"],["2026-10-04T13:00:00-04:00",195,"nfl","Patriots at Bills","","CBS"],["2026-10-04T13:00:00-04:00",195,"nfl","Cowboys at Texans","","FOX"],["2026-10-04T13:00:00-04:00",195,"nfl","Rams at Eagles","","FOX"],["2026-10-04T13:00:00-04:00",195,"nfl","Packers at Buccaneers","","FOX"],["2026-10-04T13:00:00-04:00",195,"nfl","Jets at Bears","","FOX"],["2026-10-04T16:05:00-04:00",195,"nfl","Dolphins at Vikings","","FOX"],["2026-10-04T16:25:00-04:00",195,"nfl","Broncos at 49ers","","CBS"],["2026-10-04T16:25:00-04:00",195,"nfl","Chargers at Seahawks","","CBS"],["2026-10-04T16:25:00-04:00",195,"nfl","Chiefs at Raiders","","CBS"],["2026-10-04T17:30:00-04:00",210,"nascar","South Point 400","Las Vegas Motor Speedway \u00b7 Chase race 5","USA Network"],["2026-10-04T20:20:00-04:00",195,"nfl","Lions at Panthers","Sunday Night Football","NBC / Peacock"],["2026-10-05T20:15:00-04:00",195,"nfl","Falcons at Saints","Monday Night Football","ESPN"],["2026-10-06T20:00:00-04:00",210,"ncaa","Southern Miss at Troy","","ESPN2"],["2026-10-07T19:00:00-04:00",210,"ncaa","Jacksonville State at Kennesaw State","","CBS Sports Network"],["2026-10-07T19:30:00-04:00",210,"ncaa","New Mexico State at FIU","","ESPN2"],["2026-10-08T19:00:00-04:00",210,"ncaa","Sam Houston at Liberty","","ESPNU"],["2026-10-08T19:00:00-04:00",210,"ncaa","Missouri State at WKU","","CBS Sports Network"],["2026-10-08T19:30:00-04:00",210,"ncaa","USF at UTSA","","ESPN"],["2026-10-08T19:30:00-04:00",210,"ncaa","South Alabama at Arkansas State","","ESPN2"],["2026-10-08T20:15:00-04:00",195,"nfl","Buccaneers at Cowboys","Thursday Night Football","Prime Video"],["2026-10-09T19:00:00-04:00",210,"ncaa","Florida State at Louisville","","ESPN"],["2026-10-09T21:00:00-04:00",210,"ncaa","Iowa at Washington","","FOX or FS1"],["2026-10-09T21:00:00-04:00",210,"ncaa","Washington State at Utah State","","The CW"],["2026-10-09T21:00:00-04:00",210,"ncaa","Wyoming at San Jose State","","CBS Sports Network"],["2026-10-09T22:15:00-04:00",210,"ncaa","Iowa State at BYU","","ESPN"],["2026-10-10T12:00:00-04:00",210,"ncaa","Indiana at Nebraska","","FOX"],["2026-10-10T12:00:00-04:00",210,"ncaa","South Carolina at Florida","12 or 12:45","ABC or SEC Network"],["2026-10-10T12:00:00-04:00",210,"ncaa","Texas A&M at Missouri","12 or 12:45","ABC or SEC Network"],["2026-10-10T12:00:00-04:00",210,"ncaa","North Carolina at Pitt","","ESPN or ESPN2"],["2026-10-10T12:00:00-04:00",210,"ncaa","UCF at Oklahoma State","","ESPN or ESPN2"],["2026-10-10T12:00:00-04:00",210,"ncaa","Arizona at West Virginia","","TNT / truTV"],["2026-10-10T12:00:00-04:00",210,"ncaa","Wake Forest at NC State","","The CW"],["2026-10-10T12:00:00-04:00",210,"ncaa","Tulane at Army","","CBS Sports Network"],["2026-10-10T12:30:00-04:00",210,"ncaa","Ball State at Northwestern","","Big Ten Network"],["2026-10-10T15:30:00-04:00",210,"ncaa","Texas vs. Oklahoma","Red River Rivalry, Dallas","ABC"],["2026-10-10T15:30:00-04:00",210,"ncaa","UCLA at Oregon","","CBS"],["2026-10-10T15:30:00-04:00",210,"ncaa","Stanford at Notre Dame","","NBC / Peacock"],["2026-10-10T15:30:00-04:00",210,"ncaa","Ole Miss at Vanderbilt","","ESPN"],["2026-10-10T15:30:00-04:00",210,"ncaa","Houston at Kansas State","","FOX"],["2026-10-10T15:30:00-04:00",210,"ncaa","Illinois at Michigan State","","FS1"],["2026-10-10T15:30:00-04:00",210,"ncaa","Virginia Tech at California","","ESPN2 or ACC Network"],["2026-10-10T15:30:00-04:00",210,"ncaa","Duke at Georgia Tech","","ESPN2 or ACC Network"],["2026-10-10T15:30:00-04:00",210,"ncaa","Tulsa at Navy","","CBS Sports Network"],["2026-10-10T15:45:00-04:00",210,"ncaa","UConn at Temple","","ESPNU"],["2026-10-10T16:15:00-04:00",210,"ncaa","Maryland at Ohio State","","Big Ten Network"],["2026-10-10T16:15:00-04:00",210,"ncaa","Tennessee at Arkansas","","SEC Network"],["2026-10-10T18:00:00-04:00",210,"ncaa","San Diego State at Oregon State","","USA Network"],["2026-10-10T19:00:00-04:00",210,"ncaa","LSU at Kentucky","","ESPN"],["2026-10-10T19:00:00-04:00",210,"ncaa","UAB at Memphis","7:00 or 7:30","ESPN2 or ESPNU"],["2026-10-10T19:00:00-04:00",210,"ncaa","James Madison at Georgia Southern","7:00 or 7:30","ESPN2 or ESPNU"],["2026-10-10T19:00:00-04:00",210,"ncaa","North Dakota State at UNLV","","The CW"],["2026-10-10T19:30:00-04:00",210,"ncaa","Georgia at Alabama","","ABC"],["2026-10-10T19:30:00-04:00",210,"ncaa","USC at Penn State","","NBC / Peacock"],["2026-10-10T19:30:00-04:00",210,"ncaa","Syracuse at Virginia","","ACC Network"],["2026-10-10T19:30:00-04:00",210,"ncaa","Air Force at Northern Illinois","","CBS Sports Network"],["2026-10-10T20:00:00-04:00",210,"ncaa","Minnesota at Purdue","","Big Ten Network"],["2026-10-10T22:15:00-04:00",210,"ncaa","Kansas at Utah","","ESPN"],["2026-10-10T22:30:00-04:00",210,"ncaa","Hawai'i at Arizona State","","FS1"],["2026-10-10T22:30:00-04:00",210,"ncaa","Boise State at Fresno State","","The CW"],["2026-10-11T08:00:00-04:00",120,"f1","Singapore Grand Prix","Marina Bay","Apple TV"],["2026-10-11T09:30:00-04:00",195,"nfl","Eagles vs. Jaguars","London","NFL Network"],["2026-10-11T13:00:00-04:00",195,"nfl","Bears at Packers","Moved up from 4:25","FOX"],["2026-10-11T13:00:00-04:00",195,"nfl","Raiders at Patriots","","CBS"],["2026-10-11T13:00:00-04:00",195,"nfl","Texans at Titans","","CBS"],["2026-10-11T13:00:00-04:00",195,"nfl","Browns at Jets","","CBS"],["2026-10-11T13:00:00-04:00",195,"nfl","Colts at Steelers","","CBS"],["2026-10-11T13:00:00-04:00",195,"nfl","Bengals at Dolphins","","FOX"],["2026-10-11T13:00:00-04:00",195,"nfl","Vikings at Saints","","FOX"],["2026-10-11T13:00:00-04:00",195,"nfl","Giants at Commanders","","FOX"],["2026-10-11T15:00:00-04:00",210,"nascar","Bank of America 400","Charlotte Motor Speedway \u00b7 Chase race 6","USA Network"],["2026-10-11T16:05:00-04:00",195,"nfl","Broncos at Chargers","","CBS"],["2026-10-11T16:25:00-04:00",195,"nfl","Lions at Cardinals","","FOX"],["2026-10-11T16:25:00-04:00",195,"nfl","49ers at Seahawks","","FOX"],["2026-10-11T20:20:00-04:00",195,"nfl","Ravens at Falcons","Sunday Night Football","NBC / Peacock"],["2026-10-12T20:15:00-04:00",195,"nfl","Bills at Rams","Monday Night Football","ESPN / ABC"],["2026-10-13T19:00:00-04:00",210,"ncaa","Delaware at Middle Tennessee","","CBS Sports Network"],["2026-10-13T20:00:00-04:00",210,"ncaa","FIU at Jacksonville State","","ESPNU"],["2026-10-14T19:30:00-04:00",210,"ncaa","Kennesaw State at Missouri State","","CBS Sports Network"],["2026-10-14T20:00:00-04:00",210,"ncaa","WKU at Sam Houston","","ESPN2"],["2026-10-15T20:00:00-04:00",210,"ncaa","Colorado State at Texas State","","CBS Sports Network"],["2026-10-15T20:15:00-04:00",195,"nfl","Seahawks at Broncos","Thursday Night Football","Prime Video"],["2026-10-16T19:30:00-04:00",210,"ncaa","Memphis at Tulane","","ESPN"],["2026-10-16T20:00:00-04:00",210,"ncaa","Washington at Purdue","","FOX"],["2026-10-16T20:00:00-04:00",210,"ncaa","Appalachian State at Coastal Carolina","","ESPN2"],["2026-10-17T12:00:00-04:00",210,"ncaa","FAU at Army","","CBS Sports Network"],["2026-10-18T09:30:00-04:00",195,"nfl","Texans vs. Jaguars","London","NFL Network"],["2026-10-18T13:00:00-04:00",195,"nfl","Jets at Patriots","","CBS"],["2026-10-18T13:00:00-04:00",195,"nfl","Steelers at Buccaneers","","CBS"],["2026-10-18T13:00:00-04:00",195,"nfl","Panthers at Eagles","","CBS"],["2026-10-18T13:00:00-04:00",195,"nfl","Bears at Falcons","","FOX"],["2026-10-18T13:00:00-04:00",195,"nfl","Titans at Colts","","FOX"],["2026-10-18T13:00:00-04:00",195,"nfl","Saints at Giants","","FOX"],["2026-10-18T13:00:00-04:00",195,"nfl","Ravens at Browns","","FOX"],["2026-10-18T15:00:00-04:00",210,"nascar","Freeway Insurance 500","Phoenix Raceway \u00b7 Chase race 7","USA Network"],["2026-10-18T16:05:00-04:00",195,"nfl","Cardinals at Rams","","FOX"],["2026-10-18T16:25:00-04:00",195,"nfl","Chargers at Chiefs","","CBS"],["2026-10-18T16:25:00-04:00",195,"nfl","Bills at Raiders","","CBS"],["2026-10-18T20:20:00-04:00",195,"nfl","Cowboys at Packers","Sunday Night Football","NBC / Peacock"],["2026-10-19T20:15:00-04:00",195,"nfl","Commanders at 49ers","Monday Night Football","ESPN"],["2026-10-22T20:15:00-04:00",195,"nfl","Patriots at Bears","Thursday Night Football","Prime Video"],["2026-10-25T09:30:00-04:00",195,"nfl","Steelers vs. Saints","Paris","NFL Network"],["2026-10-25T13:00:00-04:00",195,"nfl","Browns at Titans","","CBS"],["2026-10-25T13:00:00-04:00",195,"nfl","Dolphins at Jets","","CBS"],["2026-10-25T13:00:00-04:00",195,"nfl","Colts at Vikings","","CBS"],["2026-10-25T13:00:00-04:00",195,"nfl","Bengals at Ravens","","CBS"],["2026-10-25T13:00:00-04:00",195,"nfl","Giants at Texans","","FOX"],["2026-10-25T13:00:00-04:00",195,"nfl","Buccaneers at Panthers","","FOX"],["2026-10-25T13:00:00-04:00",195,"nfl","49ers at Falcons","","FOX"],["2026-10-25T14:00:00-04:00",210,"nascar","YellaWood 500","Talladega Superspeedway \u00b7 Chase race 8","NBC / Peacock"],["2026-10-25T16:00:00-04:00",120,"f1","United States Grand Prix","Circuit of the Americas, Austin","Apple TV"],["2026-10-25T16:05:00-04:00",195,"nfl","Broncos at Cardinals","","CBS"],["2026-10-25T16:25:00-04:00",195,"nfl","Rams at Raiders","","FOX"],["2026-10-25T16:25:00-04:00",195,"nfl","Packers at Lions","","FOX"],["2026-10-25T20:20:00-04:00",195,"nfl","Chiefs at Seahawks","Sunday Night Football","NBC / Peacock"],["2026-10-26T20:15:00-04:00",195,"nfl","Cowboys at Eagles","Monday Night Football","ESPN / ABC"],["2026-10-29T20:15:00-04:00",195,"nfl","Panthers at Packers","Thursday Night Football","Prime Video"],["2026-11-01T13:00:00-05:00",195,"nfl","Falcons at Buccaneers","","FOX"],["2026-11-01T13:00:00-05:00",195,"nfl","Cardinals at Cowboys","","FOX"],["2026-11-01T13:00:00-05:00",195,"nfl","Ravens at Bills","","CBS"],["2026-11-01T13:00:00-05:00",195,"nfl","Browns at Steelers","","CBS"],["2026-11-01T13:00:00-05:00",195,"nfl","Colts at Jaguars","","CBS"],["2026-11-01T13:00:00-05:00",195,"nfl","Raiders at Jets","","FOX"],["2026-11-01T13:00:00-05:00",195,"nfl","Vikings at Lions","","FOX"],["2026-11-01T13:00:00-05:00",195,"nfl","Titans at Bengals","","CBS"],["2026-11-01T14:00:00-05:00",210,"nascar","Xfinity 500","Martinsville Speedway \u00b7 Chase race 9","NBC / Peacock"],["2026-11-01T15:00:00-05:00",120,"f1","Mexico City Grand Prix","Aut\u00f3dromo Hermanos Rodr\u00edguez","Apple TV"],["2026-11-01T16:05:00-05:00",195,"nfl","Chargers at Rams","","FOX"],["2026-11-01T16:25:00-05:00",195,"nfl","Chiefs at Broncos","","CBS"],["2026-11-01T16:25:00-05:00",195,"nfl","Patriots at Dolphins","","CBS"],["2026-11-01T20:20:00-05:00",195,"nfl","Eagles at Commanders","Sunday Night Football","NBC / Peacock"],["2026-11-02T20:15:00-05:00",195,"nfl","Bears at Seahawks","Monday Night Football","ESPN"],["2026-11-05T20:15:00-05:00",195,"nfl","Jaguars at Ravens","Thursday Night Football","Prime Video"],["2026-11-08T09:30:00-05:00",195,"nfl","Bengals vs. Falcons","Madrid","NFL Network"],["2026-11-08T12:00:00-05:00",120,"f1","S\u00e3o Paulo Grand Prix","Interlagos","Apple TV"],["2026-11-08T13:00:00-05:00",195,"nfl","Browns at Saints","","CBS"],["2026-11-08T13:00:00-05:00",195,"nfl","Cowboys at Colts","","FOX"],["2026-11-08T13:00:00-05:00",195,"nfl","Broncos at Panthers","","CBS"],["2026-11-08T13:00:00-05:00",195,"nfl","Lions at Dolphins","","FOX"],["2026-11-08T13:00:00-05:00",195,"nfl","Rams at Commanders","","FOX"],["2026-11-08T13:00:00-05:00",195,"nfl","Giants at Eagles","","FOX"],["2026-11-08T13:00:00-05:00",195,"nfl","Jets at Chiefs","","CBS"],["2026-11-08T15:00:00-05:00",210,"nascar","NASCAR Cup Series Championship","Homestead-Miami Speedway \u00b7 Chase race 10 (finale)","NBC / Peacock"],["2026-11-08T16:05:00-05:00",195,"nfl","Texans at Chargers","","CBS"],["2026-11-08T16:05:00-05:00",195,"nfl","Raiders at 49ers","","CBS"],["2026-11-08T16:25:00-05:00",195,"nfl","Cardinals at Seahawks","","FOX"],["2026-11-08T16:25:00-05:00",195,"nfl","Packers at Patriots","","FOX"],["2026-11-08T20:20:00-05:00",195,"nfl","Buccaneers at Bears","Sunday Night Football","NBC / Peacock"],["2026-11-09T20:15:00-05:00",195,"nfl","Bills at Vikings","Monday Night Football","ESPN / ABC"],["2026-11-12T20:15:00-05:00",195,"nfl","Commanders at Giants","Thursday Night Football","Prime Video"],["2026-11-15T09:30:00-05:00",195,"nfl","Patriots vs. Lions","Munich","FOX"],["2026-11-15T13:00:00-05:00",195,"nfl","Panthers at Saints","","FOX"],["2026-11-15T13:00:00-05:00",195,"nfl","Bills at Jets","","CBS"],["2026-11-15T13:00:00-05:00",195,"nfl","Texans at Browns","","FOX"],["2026-11-15T13:00:00-05:00",195,"nfl","Jaguars at Titans","","FOX"],["2026-11-15T13:00:00-05:00",195,"nfl","Chiefs at Falcons","","CBS"],["2026-11-15T13:00:00-05:00",195,"nfl","Dolphins at Colts","","CBS"],["2026-11-15T13:00:00-05:00",195,"nfl","Vikings at Packers","","FOX"],["2026-11-15T16:05:00-05:00",195,"nfl","Rams at Cardinals","","CBS"],["2026-11-15T16:05:00-05:00",195,"nfl","Seahawks at Raiders","","CBS"],["2026-11-15T16:25:00-05:00",195,"nfl","49ers at Cowboys","","FOX"],["2026-11-15T20:20:00-05:00",195,"nfl","Steelers at Bengals","Sunday Night Football","NBC / Peacock"],["2026-11-16T20:15:00-05:00",195,"nfl","Chargers at Ravens","Monday Night Football","ESPN"],["2026-11-19T20:15:00-05:00",195,"nfl","Colts at Texans","Thursday Night Football","Prime Video"],["2026-11-21T23:00:00-05:00",120,"f1","Las Vegas Grand Prix","Las Vegas Strip Circuit (Saturday night)","Apple TV"],["2026-11-22T13:00:00-05:00",195,"nfl","Ravens at Panthers","","FOX"],["2026-11-22T13:00:00-05:00",195,"nfl","Cardinals at Chiefs","","CBS"],["2026-11-22T13:00:00-05:00",195,"nfl","Jaguars at Giants","","CBS"],["2026-11-22T13:00:00-05:00",195,"nfl","Dolphins at Bills","","FOX"],["2026-11-22T13:00:00-05:00",195,"nfl","Saints at Bears","","FOX"],["2026-11-22T13:00:00-05:00",195,"nfl","Buccaneers at Lions","","CBS"],["2026-11-22T13:00:00-05:00",195,"nfl","Titans at Cowboys","","FOX"],["2026-11-22T16:05:00-05:00",195,"nfl","Jets at Chargers","","FOX"],["2026-11-22T16:25:00-05:00",195,"nfl","Raiders at Broncos","","CBS"],["2026-11-22T16:25:00-05:00",195,"nfl","Steelers at Eagles","","CBS"],["2026-11-22T20:20:00-05:00",195,"nfl","Vikings vs. 49ers","Mexico City \u00b7 Sunday Night Football","NBC / Peacock"],["2026-11-23T20:15:00-05:00",195,"nfl","Bengals at Commanders","Monday Night Football","ESPN"],["2026-11-25T20:00:00-05:00",195,"nfl","Packers at Rams","Thanksgiving Eve (Wednesday)","Netflix"],["2026-11-26T13:00:00-05:00",195,"nfl","Bears at Lions","Thanksgiving","CBS"],["2026-11-26T16:30:00-05:00",195,"nfl","Eagles at Cowboys","Thanksgiving","FOX"],["2026-11-26T20:20:00-05:00",195,"nfl","Chiefs at Bills","Thanksgiving","NBC / Peacock"],["2026-11-27T15:00:00-05:00",195,"nfl","Broncos at Steelers","Black Friday","Prime Video"],["2026-11-29T11:00:00-05:00",120,"f1","Qatar Grand Prix","Lusail International Circuit","Apple TV"],["2026-11-29T13:00:00-05:00",195,"nfl","Ravens at Texans","","CBS"],["2026-11-29T13:00:00-05:00",195,"nfl","Falcons at Vikings","","FOX"],["2026-11-29T13:00:00-05:00",195,"nfl","Raiders at Browns","","FOX"],["2026-11-29T13:00:00-05:00",195,"nfl","Saints at Bengals","","CBS"],["2026-11-29T13:00:00-05:00",195,"nfl","Giants at Colts","","FOX"],["2026-11-29T13:00:00-05:00",195,"nfl","Jets at Dolphins","","CBS"],["2026-11-29T16:05:00-05:00",195,"nfl","Titans at Jaguars","","CBS"],["2026-11-29T16:25:00-05:00",195,"nfl","Seahawks at 49ers","","FOX"],["2026-11-29T16:25:00-05:00",195,"nfl","Commanders at Cardinals","","FOX"],["2026-11-29T20:20:00-05:00",195,"nfl","Patriots at Chargers","Sunday Night Football","NBC / Peacock"],["2026-11-30T20:15:00-05:00",195,"nfl","Panthers at Buccaneers","Monday Night Football","ESPN"],["2026-12-03T20:15:00-05:00",195,"nfl","Chiefs at Rams","Thursday Night Football","Prime Video"],["2026-12-06T08:00:00-05:00",120,"f1","Abu Dhabi Grand Prix","Yas Marina \u00b7 season finale","Apple TV"],["2026-12-06T13:00:00-05:00",195,"nfl","Bengals at Browns","","CBS"],["2026-12-06T13:00:00-05:00",195,"nfl","Lions at Falcons","","CBS"],["2026-12-06T13:00:00-05:00",195,"nfl","Packers at Saints","","FOX"],["2026-12-06T13:00:00-05:00",195,"nfl","Jaguars at Bears","","FOX"],["2026-12-06T13:00:00-05:00",195,"nfl","Chargers at Buccaneers","","CBS"],["2026-12-06T13:00:00-05:00",195,"nfl","49ers at Giants","","FOX"],["2026-12-06T13:00:00-05:00",195,"nfl","Commanders at Titans","","CBS"],["2026-12-06T16:05:00-05:00",195,"nfl","Dolphins at Broncos","","FOX"],["2026-12-06T16:05:00-05:00",195,"nfl","Eagles at Cardinals","","FOX"],["2026-12-06T16:25:00-05:00",195,"nfl","Bills at Patriots","","CBS"],["2026-12-06T16:25:00-05:00",195,"nfl","Panthers at Vikings","","CBS"],["2026-12-06T20:20:00-05:00",195,"nfl","Texans at Steelers","Sunday Night Football","NBC / Peacock"],["2026-12-07T20:15:00-05:00",195,"nfl","Cowboys at Seahawks","Monday Night Football","ESPN / ABC"],["2026-12-10T20:15:00-05:00",195,"nfl","Vikings at Patriots","Thursday Night Football","Prime Video"],["2026-12-13T13:00:00-05:00",195,"nfl","Falcons at Browns","","CBS"],["2026-12-13T13:00:00-05:00",195,"nfl","Bears at Dolphins","","CBS"],["2026-12-13T13:00:00-05:00",195,"nfl","Broncos at Jets","","CBS"],["2026-12-13T13:00:00-05:00",195,"nfl","Texans at Commanders","","CBS"],["2026-12-13T13:00:00-05:00",195,"nfl","Colts at Eagles","","FOX"],["2026-12-13T13:00:00-05:00",195,"nfl","Saints at Panthers","","CBS"],["2026-12-13T13:00:00-05:00",195,"nfl","Buccaneers at Ravens","","FOX"],["2026-12-13T13:00:00-05:00",195,"nfl","Titans at Lions","","FOX"],["2026-12-13T16:05:00-05:00",195,"nfl","Chargers at Raiders","","CBS"],["2026-12-13T16:25:00-05:00",195,"nfl","Chiefs at Bengals","","FOX"],["2026-12-13T16:25:00-05:00",195,"nfl","Rams at 49ers","","FOX"],["2026-12-13T16:25:00-05:00",195,"nfl","Giants at Seahawks","","FOX"],["2026-12-13T20:20:00-05:00",195,"nfl","Bills at Packers","Sunday Night Football","NBC / Peacock"],["2026-12-14T20:15:00-05:00",195,"nfl","Steelers at Jaguars","Monday Night Football","ESPN"],["2026-12-17T20:15:00-05:00",195,"nfl","49ers at Chargers","Thursday Night Football","Prime Video"],["2026-12-19T17:00:00-05:00",195,"nfl","Seahawks at Eagles","","FOX"],["2026-12-19T20:20:00-05:00",195,"nfl","Bears at Bills","","CBS"],["2026-12-20T13:00:00-05:00",195,"nfl","Ravens at Steelers","","CBS"],["2026-12-20T13:00:00-05:00",195,"nfl","Falcons at Commanders","","FOX"],["2026-12-20T13:00:00-05:00",195,"nfl","Bengals at Panthers","","FOX"],["2026-12-20T13:00:00-05:00",195,"nfl","Browns at Giants","","CBS"],["2026-12-20T13:00:00-05:00",195,"nfl","Colts at Titans","","CBS"],["2026-12-20T13:00:00-05:00",195,"nfl","Jaguars at Texans","","CBS"],["2026-12-20T13:00:00-05:00",195,"nfl","Dolphins at Packers","","FOX"],["2026-12-20T13:00:00-05:00",195,"nfl","Saints at Buccaneers","","FOX"],["2026-12-20T16:05:00-05:00",195,"nfl","Jets at Cardinals","","FOX"],["2026-12-20T16:25:00-05:00",195,"nfl","Cowboys at Rams","","CBS"],["2026-12-20T16:25:00-05:00",195,"nfl","Broncos at Raiders","","CBS"],["2026-12-20T20:20:00-05:00",195,"nfl","Lions at Vikings","Sunday Night Football","NBC / Peacock"],["2026-12-21T20:15:00-05:00",195,"nfl","Patriots at Chiefs","Monday Night Football","ESPN / ABC"],["2026-12-24T20:15:00-05:00",195,"nfl","Texans at Eagles","Thursday Night Football \u00b7 Christmas Eve","Prime Video"],["2026-12-25T13:00:00-05:00",195,"nfl","Packers at Bears","Christmas","Netflix"],["2026-12-25T16:30:00-05:00",195,"nfl","Bills at Broncos","Christmas","Netflix"],["2026-12-25T20:15:00-05:00",195,"nfl","Rams at Seahawks","Christmas","FOX"],["2026-12-27T13:00:00-05:00",195,"nfl","Browns at Ravens","","CBS"],["2026-12-27T13:00:00-05:00",195,"nfl","Chargers at Dolphins","","FOX"],["2026-12-27T13:00:00-05:00",195,"nfl","Cardinals at Saints","","FOX"],["2026-12-27T13:00:00-05:00",195,"nfl","Patriots at Jets","","CBS"],["2026-12-27T13:00:00-05:00",195,"nfl","Buccaneers at Falcons","Time and network TBD (two Week 16 games move to Sat Dec 26)","TBD"],["2026-12-27T13:00:00-05:00",195,"nfl","Bengals at Colts","Time and network TBD (two Week 16 games move to Sat Dec 26)","TBD"],["2026-12-27T13:00:00-05:00",195,"nfl","Commanders at Vikings","Time and network TBD (two Week 16 games move to Sat Dec 26)","TBD"],["2026-12-27T13:00:00-05:00",195,"nfl","Panthers at Steelers","Time and network TBD (two Week 16 games move to Sat Dec 26)","TBD"],["2026-12-27T16:05:00-05:00",195,"nfl","Titans at Raiders","","FOX"],["2026-12-27T16:25:00-05:00",195,"nfl","49ers at Chiefs","","CBS"],["2026-12-27T20:20:00-05:00",195,"nfl","Jaguars at Cowboys","Sunday Night Football","NBC / Peacock"],["2026-12-28T20:15:00-05:00",195,"nfl","Giants at Lions","Monday Night Football","ESPN"]];
+const UPDATED="Sep 30, 2026 7:49 AM ET";
+const R={"nfl":{"Bears":["2-1",null],"Bengals":["2-1",null],"Bills":["3-0",null],"Broncos":["2-1",null],"Browns":["2-1",null],"Buccaneers":["0-3",null],"Cardinals":["1-2",null],"Chargers":["0-3",null],"Chiefs":["3-0",null],"Colts":["1-2",null],"Commanders":["1-2",null],"Cowboys":["1-2",null],"Dolphins":["0-3",null],"Eagles":["2-1",null],"Falcons":["1-2",null],"49ers":["3-0",null],"Giants":["2-1",null],"Jaguars":["2-1",null],"Jets":["1-2",null],"Lions":["2-1",null],"Packers":["1-2",null],"Panthers":["1-2",null],"Patriots":["1-2",null],"Raiders":["3-0",null],"Rams":["1-2",null],"Ravens":["2-1",null],"Saints":["1-2",null],"Seahawks":["2-1",null],"Steelers":["2-1",null],"Texans":["0-3",null],"Titans":["0-3",null],"Vikings":["3-0",null]},"ncaa":{"Air Force":["2-1",null],"Alabama":["4-0",7],"Appalachian State":["3-1",null],"Arizona":["3-1",null],"Arizona State":["2-1",null],"Arkansas":["2-2",null],"Arkansas State":["2-2",null],"Army":["2-1",null],"Auburn":["3-1",null],"BYU":["3-0",10],"Ball State":["1-3",null],"Baylor":["3-1",null],"Boise State":["3-1",22],"Boston College":["2-2",null],"California":["2-2",null],"Cincinnati":["4-0",null],"Clemson":["3-1",null],"Coastal Carolina":["1-3",null],"Colorado":["2-2",null],"Colorado State":["2-2",null],"Delaware":["2-2",null],"Duke":["4-0",null],"FAU":["3-1",null],"FIU":["2-2",null],"Florida":["4-0",8],"Florida State":["2-2",null],"Fresno State":["3-1",null],"Georgia":["4-0",2],"Georgia Southern":["1-3",null],"Georgia Tech":["1-3",null],"Hawai'i":["1-3",null],"Houston":["3-1",20],"Illinois":["2-2",null],"Indiana":["4-0",6],"Iowa":["4-0",14],"Iowa State":["2-2",null],"Jacksonville State":["3-2",null],"James Madison":["4-0",null],"Kansas":["1-2",null],"Kansas State":["3-1",null],"Kennesaw State":["1-3",null],"Kentucky":["3-1",24],"LSU":["3-1",11],"Liberty":["3-1",null],"Louisville":["2-2",null],"Marshall":["3-1",null],"Maryland":["2-2",null],"McNeese":["2-3",null],"Memphis":["3-1",null],"Miami":["4-0",4],"Michigan":["3-1",null],"Michigan State":["2-2",null],"Middle Tennessee":["2-2",null],"Minnesota":["3-1",null],"Mississippi State":["4-0",16],"Missouri":["3-1",25],"Missouri State":["1-3",null],"NC State":["2-2",null],"Navy":["1-2",null],"Nebraska":["4-0",null],"New Mexico State":["1-3",null],"North Carolina":["2-1",null],"North Dakota State":["4-0",null],"North Texas":["2-2",null],"Northern Illinois":["0-4",null],"Northwestern":["2-1",null],"Notre Dame":["4-0",3],"Ohio State":["3-1",5],"Oklahoma":["2-2",null],"Oklahoma State":["3-1",19],"Ole Miss":["3-1",9],"Oregon":["3-1",15],"Oregon State":["2-2",null],"Penn State":["3-1",null],"Pitt":["4-0",null],"Purdue":["1-3",null],"Rutgers":["1-3",null],"SMU":["3-1",21],"Sam Houston":["1-3",null],"San Diego State":["1-3",null],"San Jose State":["2-2",null],"South Alabama":["2-2",null],"South Carolina":["2-2",null],"Southern Miss":["1-3",null],"Stanford":["2-2",null],"Syracuse":["1-2",null],"TCU":["2-2",null],"Temple":["1-3",null],"Tennessee":["3-1",17],"Texas":["4-0",1],"Texas A&M":["2-2",null],"Texas State":["2-2",null],"Texas Tech":["4-0",12],"Troy":["2-2",null],"Tulane":["2-2",null],"Tulsa":["3-1",null],"UAB":["2-2",null],"UCF":["3-1",null],"UCLA":["4-0",23],"UConn":["2-2",null],"UNLV":["2-2",null],"USC":["4-1",18],"USF":["4-0",null],"UTSA":["3-1",null],"Utah":["4-0",13],"Utah State":["1-3",null],"Vanderbilt":["3-1",null],"Virginia":["3-1",null],"Virginia Tech":["4-0",null],"WKU":["1-3",null],"Wake Forest":["3-1",null],"Washington":["3-1",null],"Washington State":["1-3",null],"West Virginia":["3-1",null],"Wisconsin":["3-1",null],"Wyoming":["2-2",null]}};
+const R_ASOF="NFL records after Week 3, AP poll of Sep 27, 2026";
+const TRIGGER="trig_01R79o6YTtr6TwwWDK3aiVg8";
+const LEAGUE={nfl:"NFL",ncaa:"College",nascar:"NASCAR",f1:"F1"};
+// NFL nickname -> city, so "Cleveland" finds the Browns
+const CITY={"Bears":"Chicago","Bengals":"Cincinnati","Bills":"Buffalo","Broncos":"Denver","Browns":"Cleveland","Buccaneers":"Tampa Bay Bucs","Cardinals":"Arizona","Chargers":"Los Angeles LA","Chiefs":"Kansas City KC","Colts":"Indianapolis Indy","Commanders":"Washington","Cowboys":"Dallas","Dolphins":"Miami","Eagles":"Philadelphia Philly","Falcons":"Atlanta","49ers":"San Francisco Niners SF","Giants":"New York NY","Jaguars":"Jacksonville Jags","Jets":"New York NY","Lions":"Detroit","Packers":"Green Bay","Panthers":"Carolina","Patriots":"New England Pats","Raiders":"Las Vegas","Rams":"Los Angeles LA","Ravens":"Baltimore","Saints":"New Orleans","Seahawks":"Seattle","Steelers":"Pittsburgh","Texans":"Houston","Titans":"Tennessee","Vikings":"Minnesota"};
+const games=G.map(([iso,dur,lg,ev,note,net],i)=>{
+  const start=new Date(iso),end=new Date(start.getTime()+dur*60000);
+  const teams=ev.replace(/\(.*?\)/g,"").split(/\s+(?:at|vs\.)\s+/).map(s=>s.trim());
+  const extra=lg==="nfl"?teams.map(t=>CITY[t]||"").join(" "):"";
+  return {i,iso,start,end,lg,ev,note,net,teams:lg==="nfl"||lg==="ncaa"?teams:[ev],
+    hay:(ev+" "+note+" "+net+" "+extra+" "+LEAGUE[lg]).toLowerCase()};
+});
+let filter="all",showPast=false,mine=new Set();
+try{mine=new Set(JSON.parse(localStorage.getItem("myteams")||"[]"))}catch(e){}
+try{filter=localStorage.getItem("filter")||"all"}catch(e){}
+const saveMine=()=>{try{localStorage.setItem("myteams",JSON.stringify([...mine]))}catch(e){}};
+const $=id=>document.getElementById(id);
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const fmtT=d=>d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZone:"America/New_York"});
+const dayKey=d=>d.toLocaleDateString("en-CA",{timeZone:"America/New_York"});
+const dayLbl=d=>{
+  const k=dayKey(d),today=dayKey(new Date()),tm=dayKey(new Date(Date.now()+864e5));
+  const long=d.toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric",timeZone:"America/New_York"});
+  return k===today?`<b>Today</b> · ${long}`:k===tm?`<b>Tomorrow</b> · ${long}`:`<b>${long.split(",")[0]}</b> · ${long.split(", ")[1]}`;
+};
+const isMine=g=>g.teams.some(t=>mine.has(t));
+function hl(text,q){
+  if(!q)return esc(text);
+  const i=text.toLowerCase().indexOf(q);
+  return i<0?esc(text):esc(text.slice(0,i))+"<mark>"+esc(text.slice(i,i+q.length))+"</mark>"+esc(text.slice(i+q.length));
+}
+function render(){
+  const q=$("q").value.trim().toLowerCase(),now=new Date();
+  $("clear").hidden=!q;
+  let past=0;
+  const words=q.split(/\s+/).filter(Boolean);
+  const list=games.filter(g=>{
+    if(filter==="mine"&&!isMine(g))return false;
+    if(filter!=="all"&&filter!=="mine"&&g.lg!==filter)return false;
+    if(words.length&&!words.every(w=>g.hay.includes(w)))return false;
+    if(!showPast&&g.end<now){past++;return false}
+    return true;
+  });
+  $("count").textContent=list.length+(list.length===1?" game":" games");
+  $("past").hidden=!showPast&&past===0;
+  $("past").textContent=showPast?"Hide finished games":`Show ${past} finished game${past===1?"":"s"}`;
+  if(!list.length){
+    $("list").innerHTML=filter==="mine"&&!mine.size
+      ?`<div class="empty"><b>No teams saved yet</b>Tap a team name under any game to add it here.</div>`
+      :`<div class="empty"><b>No games found</b>Try a team name like "Browns", a city like "Cleveland", or a channel like "ESPN".</div>`;
+    return;
+  }
+  const days={};list.forEach(g=>(days[dayKey(g.start)]??=[]).push(g));
+  $("list").innerHTML=Object.values(days).map(gs=>`<section class="day"><h2>${dayLbl(gs[0].start)}</h2><div class="list">${gs.map(g=>{
+    const live=g.start<=now&&now<g.end,fav=isMine(g),multi=g.teams.length>1;
+    return `<article class="game"><span class="bar ${g.lg}"></span><div class="info">
+      <div class="meta"><span class="t">${fmtT(g.start)}</span><span class="lg ${g.lg}">${LEAGUE[g.lg]}</span>${live?'<span class="live">ON NOW</span>':""}</div>
+      <div class="ev">${hl(g.ev,words.length===1?words[0]:"")}</div>
+      ${g.note?`<div class="note">${esc(g.note)}</div>`:""}
+      <span class="net">${esc(g.net)}</span>
+      ${multi?`<div class="tm">${g.teams.map(t=>{const r=(R[g.lg]||{})[t],lbl=(r&&r[1]?"#"+r[1]+" ":"")+t+(r&&r[0]?" "+r[0]:"");return `<button class="tb" data-t="${esc(t)}" aria-pressed="${mine.has(t)}" aria-label="${mine.has(t)?"Remove":"Save"} ${esc(t)}">${esc(lbl)}</button>`}).join("")}</div>`:""}</div>
+      ${multi?"<span></span>":`<button class="star" data-i="${g.i}" aria-pressed="${fav}" aria-label="${fav?"Remove":"Save"} ${esc(g.teams[0])}">★</button>`}</article>`}).join("")}</div></section>`).join("");
+}
+$("list").addEventListener("click",e=>{
+  const tb=e.target.closest(".tb");
+  if(tb){const t=tb.dataset.t;mine.has(t)?mine.delete(t):mine.add(t);saveMine();render();return}
+  const b=e.target.closest(".star");if(!b)return;
+  const g=games[+b.dataset.i];
+  if(isMine(g))g.teams.forEach(t=>mine.delete(t));else g.teams.forEach(t=>mine.add(t));
+  saveMine();render();
+});
+document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
+  filter=c.dataset.f;try{localStorage.setItem("filter",filter)}catch(e){}
+  document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===c));render();
+}));
+$("q").addEventListener("input",render);
+$("clear").addEventListener("click",()=>{$("q").value="";$("q").focus();render()});
+$("past").addEventListener("click",()=>{showPast=!showPast;render()});
+document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x.dataset.f===filter));
+render();setInterval(render,60000);
+
+// Refresh: starts a background Claude run that looks up new games, then republishes this app (open copies reload by themselves)
+$("asof").textContent=R_ASOF;
+$("updated").textContent="Games updated "+UPDATED;
+const RUN_MIN=20;
+function status(msg,err){const s=$("status");s.hidden=!msg;s.textContent=msg||"";s.className="status"+(err?" err":"")}
+function checkPending(){
+  let t=0;try{t=+localStorage.getItem("refreshAt:"+UPDATED)||0}catch(e){}
+  const left=RUN_MIN-(Date.now()-t)/60000;
+  if(t&&left>0){$("refresh").disabled=true;$("refresh").textContent="↻ Updating…";
+    status("Looking up new games now. This usually takes 10 to 20 minutes. The app reloads by itself when the new games are in.");return true}
+  $("refresh").disabled=false;$("refresh").textContent="↻ Get new games";return false;
+}
+(async()=>{
+  const mcp=await window.claude?.use?.("mcp").catch(()=>null);
+  if(!mcp)return; // no refresh from this view; the list still works
+  $("refresh").hidden=false;
+  if(!checkPending())status("");
+  $("refresh").addEventListener("click",async()=>{
+    if(checkPending())return;
+    const b=$("refresh");b.disabled=true;b.textContent="↻ Starting…";status("");
+    try{
+      await mcp.callTool("Claude Code Remote","fire_trigger",{trigger_id:TRIGGER},{cache:false});
+      try{localStorage.setItem("refreshAt:"+UPDATED,String(Date.now()))}catch(e){}
+      checkPending();
+    }catch(e){
+      b.disabled=false;b.textContent="↻ Get new games";
+      const c=e&&e.code;
+      if(c==="not_in_manifest")status("Refresh isn't allowed for this page. Tap the button again and choose Allow when Claude asks.",true);
+      else if(c==="needs_reauth")status("Your Claude Code Remote connection needs to be reconnected in claude.ai Settings → Connectors.",true);
+      else if(c==="server_not_connected"||c==="selection_required")status("Refresh only works when you're signed in to Claude as the owner of this app.",true);
+      else if(c==="tool_error")status("The update job couldn't start: "+(e.message||"unknown reason")+". Ask Claude in chat to refresh the games.",true);
+      else if(c==="server_unavailable")status("Couldn't reach Claude just now. Wait a minute and tap again.",true);
+      else status("Couldn't start the update. Wait a minute and tap again, or ask Claude in chat.",true);
+    }
+  });
+  setInterval(checkPending,60000);
+})();
+</script>
+</body>
+</html>
