@@ -37,6 +37,7 @@ h1{font-style:italic;text-transform:uppercase;letter-spacing:.03em;white-space:n
 .v2b{font-size:.55em;vertical-align:.35em;background:var(--accent);color:#fff;border-radius:6px;padding:1px 6px;letter-spacing:.06em;font-style:normal}
 .score{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:4px;font-weight:600;font-size:.98rem;color:var(--muted)}
 .score .w{color:var(--fg);font-weight:800}
+.resh:first-child{margin-top:8px;border-top:0}
 .resh{font-family:var(--display);font-size:1.5rem;text-transform:uppercase;letter-spacing:.07em;margin:30px 0 0;padding-top:14px;border-top:2px solid var(--line)}
 .nomatch{color:var(--muted);text-align:center;padding:26px 12px;font-size:.95rem}
 .share{flex:none;font:700 .8rem var(--body);border:1.5px solid var(--accent);color:var(--accent);background:var(--card);border-radius:999px;padding:6px 12px;cursor:pointer;margin-left:auto}
@@ -111,7 +112,7 @@ main{padding-inline:16px;padding-block:6px 40px}
   </header>
   <main>
     <div id="list"></div>
-    <button class="pastbtn" id="past"></button>
+    <button class="pastbtn" id="past" hidden></button>
     <p class="foot">All times Eastern. Sunday afternoon CBS and FOX games vary by area. NFL and college show the next 30 days. College games for Oct 15–17 and Oct 22–24 aren't scheduled yet. Tap a team name under a game to save just that team to My teams. Records and rankings: <span id="asof"></span>. <span id="pasof"></span>.</p>
   </main>
 </div>
@@ -143,7 +144,7 @@ const P=[["2026-08-29","ncaa","North Carolina",15,"TCU",10,0,"Neutral site: Dubl
       res:{as,hs,ot,ar,hr},teams:[a,h],hay:(ev+" "+note+" final result score "+extra+" "+LEAGUE[lg]).toLowerCase()});
   });
 })();
-let filter="all",showPast=false,mine=new Set();
+let filter="all",showPast=true,anchorPending=true,mine=new Set();
 try{mine=new Set(JSON.parse(localStorage.getItem("gf2_myteams")||"[]"))}catch(e){}
 try{filter=localStorage.getItem("gf2_filter")||"all"}catch(e){}
 const saveMine=()=>{try{localStorage.setItem("gf2_myteams",JSON.stringify([...mine]))}catch(e){}};
@@ -202,18 +203,24 @@ function render(){
   });
   fin.sort((x,y)=>x.start-y.start);
   $("count").textContent=up.length+(up.length===1?" game":" games");
-  $("past").hidden=!showPast&&pastN===0;
-  $("past").textContent=showPast?"Hide finished games":`Show ${pastN} finished game${pastN===1?"":"s"} with scores`;
   let html="";
   if(!up.length&&!fin.length){
     html=filter==="mine"&&!mine.size
       ?`<div class="empty"><b>No teams saved yet</b>Tap a team name under any game to add it here.</div>`
       :`<div class="empty"><b>No games found</b>Try a team name like "Browns", a city like "Cleveland", or a channel like "ESPN".</div>`;
   }else{
-    html=up.length?days(up,now,words,false):`<div class="nomatch">No upcoming games match.</div>`;
-    if(fin.length)html+=`<h3 class="resh">Results</h3>`+days(fin,now,words,true);
+    html=(fin.length?`<h3 class="resh">Finished games</h3>`+days(fin,now,words,false):"")
+      +`<div id="upnext"></div>`
+      +(up.length?days(up,now,words,false):`<div class="nomatch">No upcoming games match.</div>`);
   }
   $("list").innerHTML=html;
+  if(anchorPending){anchorPending=false;goUpcoming()}
+}
+function goUpcoming(){
+  const a=$("upnext");if(!a)return;
+  const h=document.querySelector("header");
+  const top=a.getBoundingClientRect().top+window.scrollY-(h?h.offsetHeight:0)-8;
+  window.scrollTo(0,Math.max(0,top));
 }
 $("list").addEventListener("click",e=>{
   const tb=e.target.closest(".tb");
@@ -225,10 +232,10 @@ $("list").addEventListener("click",e=>{
 });
 document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
   filter=c.dataset.f;try{localStorage.setItem("gf2_filter",filter)}catch(e){}
-  document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===c));render();
+  document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===c));anchorPending=true;render();
 }));
-$("q").addEventListener("input",render);
-$("clear").addEventListener("click",()=>{$("q").value="";$("q").focus();render()});
+$("q").addEventListener("input",()=>{anchorPending=true;render()});
+$("clear").addEventListener("click",()=>{$("q").value="";$("q").focus();anchorPending=true;render()});
 $("past").addEventListener("click",()=>{showPast=!showPast;render()});
 document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x.dataset.f===filter));
 render();setInterval(render,60000);
