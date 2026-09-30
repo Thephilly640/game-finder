@@ -319,7 +319,7 @@ rb.addEventListener("click",async()=>{
       try{const c=await caches.open("gf-v2");await c.delete(location.href);}catch(e){}
       status("New games found ("+m[1]+"). Reloading…");setTimeout(()=>location.reload(),600);return;
     }
-    status("You have the latest games. The schedule refreshes every morning around 5 AM ET.");
+    status("You have the latest games. The schedule refreshes every morning around 8 AM ET.");
   }catch(e){
     status("Couldn't check right now. Make sure you have signal and try again.",true);
   }
