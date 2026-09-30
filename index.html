@@ -64,6 +64,10 @@ h1{font-family:var(--display);font-size:1.9rem;line-height:1;margin:0;letter-spa
 .search input:focus{outline:none;border-color:var(--accent)}
 .clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);font-size:1.4rem;width:36px;height:36px;border-radius:50%;cursor:pointer}
 .chips{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:2px;scrollbar-width:none}
+.subrow{display:flex;align-items:center;gap:8px;margin-top:8px}
+.subrow[hidden]{display:none}
+.subrow label{font:700 .75rem var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.subrow select{font:700 .85rem var(--body);border:1.5px solid var(--line);background:var(--card);color:var(--fg);border-radius:10px;padding:7px 10px}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;font:700 .8rem var(--body);letter-spacing:.05em;text-transform:uppercase;border:1.5px solid var(--line);background:var(--card);color:var(--fg);padding:8px 13px;border-radius:999px;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
@@ -110,7 +114,7 @@ main{padding-inline:16px;padding-block:6px 40px}
       <input id="q" type="search" placeholder="Search a team, city or channel" autocomplete="off" enterkeyhint="search" aria-label="Search games">
       <button class="clear" id="clear" aria-label="Clear search" hidden>×</button>
     </div>
-    <div class="chips" role="group" aria-label="Filter">
+        <div class="chips" role="group" aria-label="Filter">
       <button class="chip" id="c-all" data-f="all" aria-pressed="true">All</button>
       <button class="chip" id="c-mine" data-f="mine" aria-pressed="false">★ My teams</button>
       <button class="chip" id="c-nfl" data-f="nfl" aria-pressed="false">NFL</button>
@@ -118,6 +122,7 @@ main{padding-inline:16px;padding-block:6px 40px}
       <button class="chip" id="c-nascar" data-f="nascar" aria-pressed="false">NASCAR</button>
       <button class="chip" id="c-f1" data-f="f1" aria-pressed="false">F1</button>
     </div>
+    <div class="subrow" id="subrow" hidden><label for="sub">Series</label><select id="sub"><option value="cup">Cup Series</option><option value="oreilly">O'Reilly Series</option><option value="truck">Truck Series</option><option value="arca">ARCA Series</option></select></div>
   </header>
   <main>
     <div id="list"></div>
@@ -163,9 +168,24 @@ const RACES=[["2026-08-29","nascar","Coke Zero Sugar 400","Daytona International
       hay:(ev+" "+venue+" final result winner "+top.map(t=>t[0]).join(" ")+" "+LEAGUE[lg]).toLowerCase()});
   });
 })();
+const SUBS={cup:"Cup Series",oreilly:"O'Reilly Series",truck:"Truck Series",arca:"ARCA Series"};
+const XUP=[["2026-10-03T19:30:00-04:00","oreilly","Focused Health 302","Las Vegas Motor Speedway","The CW"],["2026-10-09T17:00:00-04:00","truck","Charlotte race","Charlotte Motor Speedway · race name not confirmed","FOX"],["2026-10-10T16:00:00-04:00","oreilly","Charlotte race (Roval)","Charlotte Motor Speedway · race name not confirmed","The CW"],["2026-10-16T19:30:00-04:00","truck","Phoenix race","Phoenix Raceway · race name not confirmed","FS1"],["2026-10-17T19:30:00-04:00","oreilly","Phoenix race","Phoenix Raceway · race name not confirmed","The CW"],["2026-10-23T16:00:00-04:00","truck","Love's RV Stop 225","Talladega Superspeedway","FS1"],["2026-10-24T15:30:00-04:00","oreilly","Talladega race","Talladega Superspeedway · race name not confirmed","The CW"],["2026-10-30T18:00:00-04:00","truck","Martinsville race","Martinsville Speedway · race name not confirmed","FS1"]];
+const XRES=[["2026-09-05","oreilly","Fleetio 200","Darlington Raceway",[["Sheldon Creed","#00 Haas Factory Team Chevrolet"],["Corey Day",""],["Brent Crews",""],["Sammy Smith",""],["Austin Hill",""],["Anthony Alfredo",""],["Taylor Gray",""],["Sam Mayer",""],["Jeremy Clements",""],["Brandon Jones",""]]],["2026-09-12","oreilly","Nu Way 225 Powered by Bobcat and Sauced by Blues Hog","World Wide Technology Raceway",[["Jesse Love","#2 Richard Childress Racing Chevrolet"],["Sheldon Creed","#00 Chevrolet"],["Sam Mayer","#41 Chevrolet"],["Taylor Gray","#54 Toyota"],["Carson Kvapil","#1 Chevrolet"],["Parker Retzlaff","#99 Chevrolet"],["Brent Crews","#19 Toyota"],["Sammy Smith","#8 Chevrolet"],["Kyle Sieg","#28 Chevrolet"],["Jeb Burton","#27 Chevrolet"]]],["2026-09-18","oreilly","Food City 300","Bristol Motor Speedway",[["Sheldon Creed","#00 Haas Factory Team Chevrolet"],["William Sawalich","#18 Joe Gibbs Racing Toyota"],["Brent Crews","#19 Joe Gibbs Racing Toyota"],["Justin Allgaier","#7 JR Motorsports Chevrolet"],["Corey Day","#17 Hendrick Motorsports Chevrolet"],["Taylor Gray","#54 Joe Gibbs Racing Toyota"],["Sam Mayer","#41 Haas Factory Team Chevrolet"],["Parker Retzlaff","#99 Viking Motorsports Chevrolet"],["Dean Thompson","#26 Sam Hunt Racing Toyota"],["Sammy Smith","#8 JR Motorsports Chevrolet"]]],["2026-09-17","truck","UNOH 250 Presented by Ohio Logistics","Bristol Motor Speedway",[["Jake Garcia","#98 ThorSport Racing Ford"],["Bayley Currey",""],["Stewart Friesen",""],["Justin Haley",""],["Tristan McKee",""],["Giovanni Ruggiero",""],["William Sawalich",""],["Kaden Honeycutt","#11 Toyota"],["Ty Majeski",""],["Grant Enfinger",""]]],["2026-09-26","truck","Race to Stop Suicide 200 (RaceToStopSuicide.com 200)","Kansas Speedway",[["Kaden Honeycutt","#11 Toyota"],["Christian Eckes",""],["Brent Crews",""],["Daniel Hemric",""],["Ben Rhodes",""],["Chandler Smith",""],["Nick Leitz",""],["Tanner Gray",""],["Jake Garcia",""],["Corey LaJoie",""]]],["2026-09-06","arca","Audubon Park 100","DuQuoin State Fairgrounds Racetrack",[["Carson Brown","#28 Chevrolet"],["Jake Bollman","#20 Nitro Motorsports Toyota"],["Kelly Kovski","#16 Chevrolet"],["Gavan Boschele","#25 Toyota Racing Toyota"],["Thomas Annunziata","#70 JBL Toyota"],["Taylor Reimer","#77 Chevrolet"],["Jason Kitzmiller","#97 Chevrolet"],["Isaac Kitzmiller","#79 Chevrolet"],["Chase Howard","#89 Chevrolet"],["Ryan Vargas","#91 Chevrolet"]]],["2026-09-12","arca","Spruce 212","Salem Speedway",[["Max Reaves","#18 Cook Out Toyota"],["Jake Bollman","#20 Nitro Motorsports Toyota"],["Will Kimmel","#69 Ford"],["Landon Huffman","#97 Chevrolet"],["Isabella Robusto","#55 Mobil 1 Toyota"],["Tristan McKee","#77 Chevrolet"],["Thomas Annunziata","#70 JBL Toyota"],["Gavan Boschele","#25 Toyota"],["Austin Vaughn","#91 Ford"],["Carson Brown","#28 Chevrolet"]]],["2026-09-17","arca","Bush's Best 200","Bristol Motor Speedway",[["Carson Brown","#28 Chevrolet"],["Tristan McKee",""],["Kaden Honeycutt",""],["Max Reaves",""],["Isaac Kitzmiller",""],["Jake Bollman",""],["Jade Avedisian",""],["Andy Jankowiak",""],["Thomas Annunziata",""],["Taylor Mayhew",""]]],["2026-09-25","arca","Menards 150","Kansas Speedway",[["Carson Brown","#28 Chevrolet"],["Giovanni Ruggiero","#18 Toyota"],["Gavan Boschele","#25 Toyota"],["Lanie Buice","#77 Chevrolet"],["Thomas Annunziata","#70 JBL Toyota"],["Andy Jankowiak","#71 Chevrolet"],["Jason Kitzmiller","#97 Chevrolet"],["Isabella Robusto","#55 Toyota"],["Mike Christopher Jr.","#42 Toyota"],["Esteban Rodriguez","#38 Toyota"]]]];
+XUP.forEach(([iso,sub,ev,note,net])=>{
+  const start=new Date(iso),end=new Date(start.getTime()+210*60000);
+  games.push({i:games.length,iso,start,end,lg:"nascar",sub,ev,note,net,teams:[ev],hay:(ev+" "+note+" "+net+" nascar "+SUBS[sub]).toLowerCase()});
+});
+XRES.forEach(([d,sub,ev,venue,top])=>{
+  const start=new Date(d+"T12:00:00-04:00");
+  games.push({i:games.length,iso:start.toISOString(),start,end:start,lg:"nascar",sub,ev,note:venue,net:"",fin:true,race:top,teams:[ev],
+    hay:(ev+" "+venue+" final result winner "+top.map(t=>t[0]).join(" ")+" nascar "+SUBS[sub]).toLowerCase()});
+});
+games.forEach(g=>{if(!g.sub)g.sub="cup"});
+let sub="cup";
 let filter="all",showPast=true,anchorPending=true,mine=new Set();
 try{mine=new Set(JSON.parse(localStorage.getItem("myteams")||"[]"))}catch(e){}
 try{filter=localStorage.getItem("filter")||"all"}catch(e){}
+try{sub=localStorage.getItem("sub")||"cup";if(!SUBS[sub])sub="cup"}catch(e){}
 const saveMine=()=>{try{localStorage.setItem("myteams",JSON.stringify([...mine]))}catch(e){}};
 const $=id=>document.getElementById(id);
 const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
@@ -198,7 +218,7 @@ function card(g,words,now){
     const w=g.race[0],open=openR.has(g.i);
     const rows=g.race.map((t,n)=>`<li><b>${t[0]}</b><span>${esc(t[1])}</span></li>`).join("");
     return `<article class="game race"><span class="bar ${g.lg}"></span><div class="info">
-      <div class="meta"><span class="t">FINAL</span><span class="lg ${g.lg}">${LEAGUE[g.lg]}</span></div>
+      <div class="meta"><span class="t">FINAL</span><span class="lg ${g.lg}">${LEAGUE[g.lg]}${g.sub&&g.sub!=="cup"?" · "+SUBS[g.sub].replace(" Series",""):""}</span></div>
       <div class="ev">${hl(g.ev,words.length===1?words[0]:"")}</div>
       <div class="score"><span class="w">Winner: ${esc(w[0])}</span></div>
       <div class="note">${esc(w[1])} · ${esc(g.note)}</div>
@@ -206,7 +226,7 @@ function card(g,words,now){
       ${open?`<ol class="t10">${rows}</ol>`:""}</div><span></span></article>`;
   }
   return `<article class="game"><span class="bar ${g.lg}"></span><div class="info">
-      <div class="meta"><span class="t">${first}</span><span class="lg ${g.lg}">${LEAGUE[g.lg]}</span>${live?'<span class="live">ON NOW</span>':""}</div>
+      <div class="meta"><span class="t">${first}</span><span class="lg ${g.lg}">${LEAGUE[g.lg]}${g.sub&&g.sub!=="cup"?" · "+SUBS[g.sub].replace(" Series",""):""}</span>${live?'<span class="live">ON NOW</span>':""}</div>
       <div class="ev">${hl(g.ev,words.length===1?words[0]:"")}</div>
       ${score}${g.note?`<div class="note">${esc(g.note)}</div>`:""}
       ${g.net?`<span class="net">${esc(g.net)}</span>`:""}
@@ -227,12 +247,14 @@ function render(){
   games.forEach(g=>{
     if(filter==="mine"&&!isMine(g))return;
     if(filter!=="all"&&filter!=="mine"&&g.lg!==filter)return;
+    if(g.lg==="nascar"&&g.sub!==(filter==="nascar"?sub:"cup"))return;
     if(words.length&&!words.every(w=>g.hay.includes(w)))return;
     if(g.fin||g.end<now){pastN++;if(showPast)fin.push(g);return}
     if((g.lg==="nfl"||g.lg==="ncaa")&&g.start.getTime()>horizon)return;
     up.push(g);
   });
   fin.sort((x,y)=>x.start-y.start);
+  $("subrow").hidden=filter!=="nascar";$("sub").value=sub;
   const rc=filter==="nascar"||filter==="f1",unit=rc?"race":"game";
   $("count").textContent=up.length+" "+unit+(up.length===1?"":"s");
   let html="";
@@ -243,7 +265,7 @@ function render(){
   }else{
     html=(fin.length?`<h3 class="resh">Finished games</h3>`+days(fin,now,words,false):"")
       +`<div id="upnext"></div>`
-      +(up.length?days(up,now,words,false):`<div class="nomatch">No upcoming ${unit}s match.</div>`);
+      +(up.length?days(up,now,words,false):`<div class="nomatch">${filter==="nascar"&&sub==="arca"?"ARCA's season is over (finale was Sep 25).":"No upcoming "+unit+"s match."}</div>`);
   }
   $("list").innerHTML=html;
   if(anchorPending){anchorPending=false;goUpcoming()}
@@ -268,6 +290,7 @@ document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
   filter=c.dataset.f;try{localStorage.setItem("filter",filter)}catch(e){}
   document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===c));anchorPending=true;render();
 }));
+$("sub").addEventListener("change",e=>{sub=e.target.value;try{localStorage.setItem("sub",sub)}catch(x){}anchorPending=true;render()});
 $("q").addEventListener("input",()=>{anchorPending=true;render()});
 $("clear").addEventListener("click",()=>{$("q").value="";$("q").focus();anchorPending=true;render()});
 $("past").addEventListener("click",()=>{showPast=!showPast;render()});
