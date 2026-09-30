@@ -84,6 +84,7 @@ main{padding-inline:16px;padding-block:6px 40px}
 .foot{color:var(--muted);font-size:.8rem;margin-top:28px;line-height:1.5}
 .pastbtn{display:block;margin:14px auto 0;font:600 .85rem var(--body);background:none;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:8px 14px;cursor:pointer}
 </style>
+<script data-goatcounter="https://gamefinder.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head><body>
 <div class="app">
   <header>
@@ -203,6 +204,14 @@ $("share").addEventListener("click",async()=>{
   try{await navigator.clipboard.writeText(url);b.textContent="Link copied";setTimeout(()=>b.textContent="Share",2000)}
   catch(e){window.prompt("Copy this link:",url)}
 });
+
+
+// Usage counts (GoatCounter, no cookies, no personal info): installs and opens from the home screen
+(function(){
+  const hit=(p,t)=>{try{if(window.goatcounter&&window.goatcounter.count)window.goatcounter.count({path:p,title:t,event:true});else setTimeout(()=>hit(p,t),1500)}catch(e){}};
+  window.addEventListener("appinstalled",()=>hit("app-installed","App installed"));
+  try{if(matchMedia("(display-mode: standalone)").matches||navigator.standalone)hit("opened-from-home-screen","Opened from home screen")}catch(e){}
+})();
 
 // Get new games: pulls the newest published copy of the app and reloads if the data is newer
 $("updated").textContent="Updated "+UPDATED.replace(/, \d{4}/,"");
