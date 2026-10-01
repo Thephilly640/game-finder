@@ -507,12 +507,46 @@ $("past").addEventListener("click",()=>{showPast=!showPast;render()});
 document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x.dataset.f===filter));
 render();setInterval(render,60000);
 // Hourly auto-updates: data.json is rewritten every hour by a GitHub job (scores, records, ranks, spreads)
+games.forEach(g=>{g.k0=g.iso+"|"+g.ev});
+const appliedNew=new Set();
+function applySched(rows){
+  const by=new Map(games.map(g=>[g.k0,g]));
+  (rows||[]).forEach(([orig,iso,dur,lg,ev,note,net,sub])=>{
+    const g=orig?by.get(orig):null;
+    const start=new Date(iso);
+    if(g){
+      g.iso=iso;g.start=start;g.end=new Date(start.getTime()+dur*60000);g.net=net||g.net;
+      g.hay=(g.ev+" "+(g.note||"")+" "+g.net+" "+LEAGUE[g.lg]).toLowerCase();
+      return;
+    }
+    const k=iso+"|"+ev;
+    if(orig||appliedNew.has(k)||by.has(k))return;
+    appliedNew.add(k);
+    const teams=lg==="nfl"||lg==="ncaa"?ev.replace(/\(.*?\)/g,"").split(/\s+(?:at|vs\.)\s+/).map(x=>x.trim()):[ev];
+    const extra=lg==="nfl"?teams.map(t=>CITY[t]||"").join(" "):"";
+    const ng={i:games.length,iso,start,end:new Date(start.getTime()+dur*60000),lg,sub:sub||"cup",ev,note:note||"",net:net||"",teams,k0:k,
+      hay:(ev+" "+(note||"")+" "+(net||"")+" "+extra+" "+LEAGUE[lg]+" "+(sub?SUBS[sub]||"":"")).toLowerCase()};
+    games.push(ng);
+  });
+}
+function applyRaces(rows){
+  const have=new Set(games.filter(g=>g.race).map(g=>g.lg+"|"+(g.sub||"")+"|"+dayKey(g.start)));
+  (rows||[]).forEach(([d,lg,sub,ev,venue,top])=>{
+    const start=new Date(d+"T12:00:00-04:00"),k=lg+"|"+(lg==="nascar"?sub:"")+"|"+dayKey(start);
+    if(have.has(k))return;
+    have.add(k);
+    games.push({i:games.length,iso:start.toISOString(),start,end:start,lg,sub:lg==="nascar"?sub:"cup",ev,note:venue,net:"",fin:true,race:top,teams:[ev],
+      hay:(ev+" "+venue+" final result winner "+top.map(t=>t[0]).join(" ")+" "+LEAGUE[lg]).toLowerCase()});
+  });
+}
 let liveStamp="";
 const gkey=g=>dayKey(g.start)+"|"+[...g.teams].sort().join("/");
 function applyData(dj){
   if(!dj)return;
   if(dj.R)["nfl","ncaa"].forEach(lg=>Object.entries(dj.R[lg]||{}).forEach(([t,v])=>{(R[lg]=R[lg]||{})[t]=v}));
+  applySched(dj.sched);
   if(dj.spreads)Object.assign(SP,dj.spreads);
+  applyRaces(dj.races);
   const have=new Set(games.filter(g=>g.fin&&g.res).map(gkey));
   (dj.finals||[]).forEach(([d,lg,a,as,h,hs,ot,note,ar,hr])=>{
     const start=new Date(d+"T12:00:00-04:00"),k=dayKey(start)+"|"+[a,h].sort().join("/");
@@ -533,7 +567,16 @@ async function loadLive(){
     applyData(await r.json());render();
   }catch(e){}
 }
-loadLive();setInterval(loadLive,10*60*1000);
+async function loadRosters(){
+  try{
+    const r=await fetch("rosters.json?t="+Math.floor(Date.now()/36e5),{cache:"no-store"});
+    if(!r.ok)return;
+    const j=await r.json();
+    Object.keys(j).forEach(t=>{if(t[0]!=="_"&&Array.isArray(j[t])&&j[t].length>=40)PL[t]=j[t]});
+    render();
+  }catch(e){}
+}
+loadLive();loadRosters();setInterval(loadLive,10*60*1000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadLive()});
 
 
