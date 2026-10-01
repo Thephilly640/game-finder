@@ -191,7 +191,7 @@ main{padding-inline:16px;padding-block:6px 40px}
       <div class="pk-add"><input id="pk-n" placeholder="Not listed? Player name"><select id="pk-t"></select><button id="pk-a" type="button">Add a player</button></div></div></div>
     <div class="mdl" id="mdl" hidden><div class="mdl-b" role="dialog" aria-modal="true"><div class="mdl-t"><span id="mdl-h"></span><button class="mdl-x" id="mdl-x" type="button">Close</button></div><div class="list" id="mdl-c"></div></div></div>
     <button class="pastbtn" id="past" hidden></button>
-    <p class="foot">All times Eastern. Sunday afternoon CBS and FOX games vary by area. NFL and college show the next 30 days. College games for Oct 15–17 and Oct 22–24 aren't scheduled yet. Tap a team name under a game to save just that team to My teams. Records and rankings: <span id="asof"></span>. <span id="pasof"></span>. <span id="spasof"></span>. Not betting advice.</p>
+    <p class="foot">All times Eastern. Sunday afternoon CBS and FOX games vary by area. NFL and college show the next 30 days. College games for Oct 15–17 and Oct 22–24 aren't scheduled yet. Tap a team name under a game to save just that team to My teams. Records and rankings: <span id="asof"></span>. <span id="pasof"></span>. <span id="spasof"></span>. <span id="live"></span> Not betting advice.</p>
     <p class="credit">Developed by: Phillip Bauman</p>
   </main>
 </div>
@@ -328,6 +328,7 @@ function render(){
   const words=q.split(/\s+/).filter(Boolean);
   const up=[],fin=[];
   games.forEach(g=>{
+    if(g.hide)return;
     if(filter==="mine"&&!isMine(g))return;
     if(filter!=="all"&&filter!=="mine"&&g.lg!==filter)return;
     if(fantasyOn()&&!(g.lg==="nfl"&&g.teams.some(t=>mineByTeam(t).length)))return;
@@ -505,6 +506,35 @@ $("clear").addEventListener("click",()=>{$("q").value="";$("q").focus();anchorPe
 $("past").addEventListener("click",()=>{showPast=!showPast;render()});
 document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x.dataset.f===filter));
 render();setInterval(render,60000);
+// Hourly auto-updates: data.json is rewritten every hour by a GitHub job (scores, records, ranks, spreads)
+let liveStamp="";
+const gkey=g=>dayKey(g.start)+"|"+[...g.teams].sort().join("/");
+function applyData(dj){
+  if(!dj)return;
+  if(dj.R)["nfl","ncaa"].forEach(lg=>Object.entries(dj.R[lg]||{}).forEach(([t,v])=>{(R[lg]=R[lg]||{})[t]=v}));
+  if(dj.spreads)Object.assign(SP,dj.spreads);
+  const have=new Set(games.filter(g=>g.fin&&g.res).map(gkey));
+  (dj.finals||[]).forEach(([d,lg,a,as,h,hs,ot,note,ar,hr])=>{
+    const start=new Date(d+"T12:00:00-04:00"),k=dayKey(start)+"|"+[a,h].sort().join("/");
+    games.forEach(g=>{if(!g.fin&&(g.lg===lg)&&g.teams.length===2&&gkey(g)===k)g.hide=true});
+    if(have.has(k))return;
+    have.add(k);
+    const ev=/neutral/i.test(note)?a+" vs. "+h:a+" at "+h;
+    games.push({i:games.length,iso:start.toISOString(),start,end:start,lg,ev,note:note+(ot?(note?" · ":"")+"OT":""),net:"",fin:true,
+      res:{as,hs,ot,ar,hr},teams:[a,h],sub:"cup",hay:(ev+" "+note+" final result score "+LEAGUE[lg]).toLowerCase()});
+  });
+  liveStamp=dj.updated||"";
+  const el=$("live");if(el)el.textContent=liveStamp?"Scores, records and spreads auto-updated: "+liveStamp+".":"";
+}
+async function loadLive(){
+  try{
+    const r=await fetch("data.json?t="+Date.now(),{cache:"no-store"});
+    if(!r.ok)return;
+    applyData(await r.json());render();
+  }catch(e){}
+}
+loadLive();setInterval(loadLive,10*60*1000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadLive()});
 
 
 // Usage counts (GoatCounter, no cookies, no personal info): installs and opens from the home screen
