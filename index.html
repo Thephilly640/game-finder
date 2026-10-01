@@ -68,8 +68,42 @@ h1{font-family:var(--display);font-size:1.9rem;line-height:1;margin:0;letter-spa
 .subrow[hidden]{display:none}
 .subrow label{font:700 .75rem var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .subrow select{font:700 .85rem var(--body);border:1.5px solid var(--line);background:var(--card);color:var(--fg);border-radius:10px;padding:7px 10px}
+.viewrow{display:flex;gap:6px;margin-top:8px}
+.vb{font:700 .75rem var(--body);letter-spacing:.05em;text-transform:uppercase;border:1.5px solid var(--line);background:var(--card);color:var(--fg);padding:6px 12px;border-radius:8px;cursor:pointer}
+.vb[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.cal{margin-top:6px}
+.cal-h,.cal-w{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.cal-h{margin-bottom:3px;text-align:center;font:700 .62rem var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cal-w{margin-bottom:3px}
+.cal-d{background:var(--card);border:1px solid var(--line);border-radius:6px;min-height:92px;padding:3px 2px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.cal-d.today{border:2px solid var(--accent)}
+.cal-d.old{opacity:.8}
+.cal-n{font:700 .68rem var(--body);color:var(--muted);padding-left:2px}
+.cal-d.today .cal-n{color:var(--accent)}
+.cp{display:block;width:100%;text-align:left;font:700 .54rem/1.15 var(--body);border:0;border-left:3px solid var(--fg);background:var(--bg);color:var(--fg);border-radius:3px;padding:2px 2px 2px 3px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cp.nfl{border-color:var(--nfl)}.cp.ncaa{border-color:var(--ncaa)}.cp.nascar{border-color:var(--nascar)}.cp.f1{border-color:var(--f1)}
+.cp.fin{opacity:.6}
+.pastbtn[hidden]{display:none}
+.cp-more{display:block;font:700 .54rem var(--body);color:var(--muted);text-align:center}
+.cp-show{margin-top:auto;font:700 .6rem var(--body);letter-spacing:.04em;text-transform:uppercase;border:1.5px solid var(--accent);color:var(--accent);background:var(--card);border-radius:5px;padding:3px 0;cursor:pointer;width:100%}
+.cp.more{border-left-color:var(--muted);color:var(--muted);text-align:center;padding-left:2px}
+.cal-note{font-size:.72rem;color:var(--muted);margin:8px 2px 0;text-align:center}
+.mdl{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.mdl[hidden]{display:none}
+.mdl-b{background:var(--bg);width:100%;max-width:560px;max-height:85vh;overflow:auto;border-radius:16px 16px 0 0;padding:14px 14px 22px}
+.mdl-t{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font:700 .8rem var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mdl-x{font:700 .85rem var(--body);border:1.5px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:6px 14px;cursor:pointer}
+.mdl .list{display:grid;gap:10px}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;font:700 .8rem var(--body);letter-spacing:.05em;text-transform:uppercase;border:1.5px solid var(--line);background:var(--card);color:var(--fg);padding:8px 13px;border-radius:999px;cursor:pointer}
+.chip[data-f="nfl"]{border-color:var(--nfl);color:var(--nfl)}
+.chip[data-f="ncaa"]{border-color:var(--ncaa);color:var(--ncaa)}
+.chip[data-f="nascar"]{border-color:var(--nascar);color:var(--nascar)}
+.chip[data-f="f1"]{border-color:var(--f1);color:var(--f1)}
+.chip[data-f="nfl"][aria-pressed="true"]{background:var(--nfl);color:var(--bg);border-color:var(--nfl)}
+.chip[data-f="ncaa"][aria-pressed="true"]{background:var(--ncaa);color:var(--bg);border-color:var(--ncaa)}
+.chip[data-f="nascar"][aria-pressed="true"]{background:var(--nascar);color:var(--bg);border-color:var(--nascar)}
+.chip[data-f="f1"][aria-pressed="true"]{background:var(--f1);color:var(--bg);border-color:var(--f1)}
 .chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .chip:focus-visible,.star:focus-visible,.clear:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 main{padding-inline:16px;padding-block:6px 40px}
@@ -114,7 +148,8 @@ main{padding-inline:16px;padding-block:6px 40px}
       <input id="q" type="search" placeholder="Search a team, city or channel" autocomplete="off" enterkeyhint="search" aria-label="Search games">
       <button class="clear" id="clear" aria-label="Clear search" hidden>×</button>
     </div>
-        <div class="chips" role="group" aria-label="Filter">
+        <div class="viewrow" role="group" aria-label="View"><button class="vb" id="v-list" data-v="list" aria-pressed="true">List</button><button class="vb" id="v-cal" data-v="cal" aria-pressed="false">2-week calendar</button></div>
+    <div class="chips" role="group" aria-label="Filter">
       <button class="chip" id="c-all" data-f="all" aria-pressed="true">All</button>
       <button class="chip" id="c-mine" data-f="mine" aria-pressed="false">★ My teams</button>
       <button class="chip" id="c-nfl" data-f="nfl" aria-pressed="false">NFL</button>
@@ -126,6 +161,7 @@ main{padding-inline:16px;padding-block:6px 40px}
   </header>
   <main>
     <div id="list"></div>
+    <div class="mdl" id="mdl" hidden><div class="mdl-b" role="dialog" aria-modal="true"><div class="mdl-t"><span id="mdl-h"></span><button class="mdl-x" id="mdl-x" type="button">Close</button></div><div class="list" id="mdl-c"></div></div></div>
     <button class="pastbtn" id="past" hidden></button>
     <p class="foot">All times Eastern. Sunday afternoon CBS and FOX games vary by area. NFL and college show the next 30 days. College games for Oct 15–17 and Oct 22–24 aren't scheduled yet. Tap a team name under a game to save just that team to My teams. Records and rankings: <span id="asof"></span>. <span id="pasof"></span>.</p>
     <p class="credit">Developed by: Phillip Bauman</p>
@@ -181,7 +217,7 @@ XRES.forEach(([d,sub,ev,venue,top])=>{
     hay:(ev+" "+venue+" final result winner "+top.map(t=>t[0]).join(" ")+" nascar "+SUBS[sub]).toLowerCase()});
 });
 games.forEach(g=>{if(!g.sub)g.sub="cup"});
-let sub="cup";
+let sub="cup",view="list",modalIds=null,modalHead="";
 let filter="all",showPast=true,anchorPending=true,mine=new Set();
 try{mine=new Set(JSON.parse(localStorage.getItem("myteams")||"[]"))}catch(e){}
 try{filter=localStorage.getItem("filter")||"all"}catch(e){}
@@ -258,6 +294,11 @@ function render(){
   const rc=filter==="nascar"||filter==="f1",unit=rc?"race":"game";
   $("count").textContent=up.length+" "+unit+(up.length===1?"":"s");
   let html="";
+  if(view==="cal"){
+    $("list").innerHTML=calHtml([...fin,...up],now);anchorPending=false;
+    if(modalIds)paintModal();
+    return;
+  }
   if(!up.length&&!fin.length){
     html=filter==="mine"&&!mine.size
       ?`<div class="empty"><b>No teams saved yet</b>Tap a team name under any game to add it here.</div>`
@@ -269,14 +310,65 @@ function render(){
   }
   $("list").innerHTML=html;
   if(anchorPending){anchorPending=false;goUpcoming()}
+  if(modalIds)paintModal();
 }
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function abbr(t){
+  t=t.replace(/\(.*?\)/g,"").trim();
+  const w=t.split(/\s+/).filter(Boolean);
+  if(w.length===1)return w[0].slice(0,3).toUpperCase();
+  return w.map(x=>x[0]).join("").slice(0,3).toUpperCase();
+}
+function pillText(g){
+  if(g.lg==="nfl"||g.lg==="ncaa"){
+    const neutral=/ vs\. /.test(g.ev);
+    return abbr(g.teams[0])+"\n"+(neutral?"v ":"@")+abbr(g.teams[1]);
+  }
+  if(g.lg==="f1")return "F1 "+g.ev.split(" ")[0];
+  return (g.sub&&g.sub!=="cup"?({oreilly:"OR",truck:"TR",arca:"AR"})[g.sub]+" ":"")+(g.note||g.ev).split(" ")[0];
+}
+let calList=[];
+function calHtml(list,now){
+  calList=list;
+  const todayK=dayKey(now),parts=todayK.split("-").map(Number);
+  const base=new Date(Date.UTC(parts[0],parts[1]-1,parts[2]));
+  base.setUTCDate(base.getUTCDate()-base.getUTCDay());
+  const by={};list.forEach(g=>(by[dayKey(g.start)]??=[]).push(g));
+  let h='<div class="cal"><div class="cal-h">'+["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>`<span>${d}</span>`).join("")+'</div>';
+  const MAXP=4;
+  for(let w=0;w<2;w++){
+    h+='<div class="cal-w">';
+    for(let d=0;d<7;d++){
+      const dt=new Date(base.getTime());dt.setUTCDate(base.getUTCDate()+w*7+d);
+      const k=dt.toISOString().slice(0,10),gs=(by[k]||[]).slice().sort((a,b)=>(a.fin?0:1)-(b.fin?0:1)||a.start-b.start);
+      const lbl=(dt.getUTCDate()===1||(w===0&&d===0)?MONTHS[dt.getUTCMonth()]+" ":"")+dt.getUTCDate();
+      h+=`<div class="cal-d${k===todayK?" today":""}${k<todayK?" old":""}"><span class="cal-n">${lbl}</span>`;
+      gs.slice(0,MAXP).forEach(g=>{h+=`<button class="cp ${g.lg}${g.fin?" fin":""}" data-g="${g.i}" aria-label="${esc(g.ev)}">${esc(pillText(g)).replace("\n","<br>")}</button>`});
+      if(gs.length>MAXP)h+=`<span class="cp-more">+${gs.length-MAXP} more</span>`;
+      if(gs.length)h+=`<button class="cp-show" data-day="${k}" aria-label="Show all ${gs.length} on ${lbl}">Show</button>`;
+      h+='</div>';
+    }
+    h+='</div>';
+  }
+  return h+'<p class="cal-note">Tap a game, or Show, for details. Dimmed games are finished.</p></div>';
+}
+const gById=i=>games.find(g=>g.i===i);
+function paintModal(){
+  if(!modalIds)return;
+  const now=new Date(),gs=modalIds.map(gById).filter(Boolean);
+  $("mdl-h").textContent=modalHead;
+  $("mdl-c").innerHTML=gs.map(g=>card(g,[],now)).join("");
+  $("mdl").hidden=false;
+}
+function openModal(ids,head){modalIds=ids;modalHead=head;paintModal()}
+function closeModal(){modalIds=null;$("mdl").hidden=true}
 function goUpcoming(){
   const a=$("upnext");if(!a)return;
   const h=document.querySelector("header");
   const top=a.getBoundingClientRect().top+window.scrollY-(h?h.offsetHeight:0)-8;
   window.scrollTo(0,Math.max(0,top));
 }
-$("list").addEventListener("click",e=>{
+function onAct(e){
   const xp=e.target.closest(".xp");
   if(xp){const i=+xp.dataset.r;openR.has(i)?openR.delete(i):openR.add(i);render();return}
   const tb=e.target.closest(".tb");
@@ -285,7 +377,28 @@ $("list").addEventListener("click",e=>{
   const g=games[+b.dataset.i];
   if(isMine(g))g.teams.forEach(t=>mine.delete(t));else g.teams.forEach(t=>mine.add(t));
   saveMine();render();
+}
+$("list").addEventListener("click",e=>{
+  const cp=e.target.closest(".cp,.cp-show");
+  if(cp){
+    if(cp.dataset.day){
+      const k=cp.dataset.day,ids=calList.filter(g=>dayKey(g.start)===k).sort((a,b)=>(a.fin?0:1)-(b.fin?0:1)||a.start-b.start).map(g=>g.i);
+      openModal(ids,new Date(k+"T12:00:00Z").toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric",timeZone:"UTC"}));
+    }else{const g=gById(+cp.dataset.g);openModal([g.i],g.start.toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric",timeZone:"America/New_York"}))}
+    return;
+  }
+  onAct(e);
 });
+$("mdl-c").addEventListener("click",onAct);
+$("mdl-x").addEventListener("click",closeModal);
+$("mdl").addEventListener("click",e=>{if(e.target===$("mdl"))closeModal()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&modalIds)closeModal()});
+document.querySelectorAll(".vb").forEach(b=>b.addEventListener("click",()=>{
+  view=b.dataset.v;closeModal();
+  document.querySelectorAll(".vb").forEach(x=>x.setAttribute("aria-pressed",x===b));
+  $("past").hidden=true;anchorPending=view==="list";render();
+  if(view==="cal")window.scrollTo(0,0);
+}));
 document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
   filter=c.dataset.f;try{localStorage.setItem("filter",filter)}catch(e){}
   document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===c));anchorPending=true;render();
