@@ -12,7 +12,7 @@
 <style>
 /* Layout: one-screen phone app — sticky header (title, search, series chips), scrolling day-grouped game list */
 :root{
-  --past:#d3d9d5;--pastfg:#4a534e;
+  --past:#d3d9d5;--pastfg:#4a534e;--scrim:rgba(238,241,239,.66);
   --bg:#eef1ef;--card:#ffffff;--fg:#161a18;--muted:#5b6560;--line:#d9dfdb;--field:#ffffff;
   --accent:#c8281c;--star:#d99a0b;--live:#c72e2e;
   --golf:#6a42a8;--nascar:#c9361f;--f1:#1d5fb8;--nfl:#1f6f4a;--ncaa:#8a5a12;
@@ -21,14 +21,15 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#121615;--card:#1b201e;--fg:#e9eeeb;--muted:#99a39e;--line:#2b322f;--field:#232927;
   --accent:#ff6a55;--star:#f2c14e;--live:#ff6b6b;
-  --past:#0d100f;--pastfg:#8a948f;
+  --past:#0d100f;--pastfg:#8a948f;--scrim:rgba(18,22,21,.7);
   --golf:#b794f0;--nascar:#ff7a63;--f1:#78aef5;--nfl:#6fd09c;--ncaa:#e6b25f;color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121615;--card:#1b201e;--fg:#e9eeeb;--muted:#99a39e;--line:#2b322f;--field:#232927;
   --accent:#ff6a55;--star:#f2c14e;--live:#ff6b6b;
-  --past:#0d100f;--pastfg:#8a948f;
+  --past:#0d100f;--pastfg:#8a948f;--scrim:rgba(18,22,21,.7);
   --golf:#b794f0;--nascar:#ff7a63;--f1:#78aef5;--nfl:#6fd09c;--ncaa:#e6b25f;color-scheme:dark}
 html,body{height:100%}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(var(--scrim),var(--scrim)),url(bg.jpg) center top/cover no-repeat}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.35;-webkit-tap-highlight-color:transparent}
 .app{max-width:560px;margin:0 auto}
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-inline:16px;padding-block:14px 16px;border-bottom:0}
