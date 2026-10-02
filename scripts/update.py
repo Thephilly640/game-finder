@@ -16,6 +16,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CORE = "https://sports.core.api.espn.com/v2/sports/"
 FB = CORE + "football/leagues/"
 RC = CORE + "racing/leagues/"
+GF = CORE + "golf/leagues/"
 ALIAS = {"Massachusetts": "UMass", "Connecticut": "UConn", "Hawai'i": "Hawaii", "San José State": "San Jose State",
          "App State": "Appalachian State"}
 NET = {"USA Net": "USA Network", "CBSSN": "CBS Sports Network", "FS1": "FS1", "BTN": "Big Ten Network",
@@ -25,6 +26,8 @@ ERRORS = []
 _cache = {}
 
 def get(url, quiet=False):
+    if not url:
+        return None
     url = url.replace("http://", "https://")
     if url in _cache:
         return _cache[url]
@@ -275,6 +278,86 @@ def racing_results(names, known):
             res.append([d, lg, sub, ev.get("name", "Race"), venue, top])
     return res
 
+
+# ---------------------------------------------------------------- golf (PGA Tour and LIV)
+def golf_net(comp):
+    b = get(ref(comp.get("broadcasts"))) if ref(comp.get("broadcasts")) else None
+    out = []
+    for i in sorted((b or {}).get("items", []), key=lambda x: x.get("priority", 99)):
+        if (i.get("market") or {}).get("type", "National") != "National":
+            continue
+        n = i.get("station") or (i.get("media") or {}).get("shortName") or ""
+        n = NET.get(n, n)
+        if n and n not in out:
+            out.append(n)
+    out.sort(key=lambda n: n == "ESPN+")  # streaming last
+    return " / ".join(out[:3])
+
+def golf_top(slug, ev, comp):
+    cc = comp.get("competitors")
+    if isinstance(cc, list) and cc:
+        items = cc
+    else:
+        cl = get(ref(cc)) if ref(cc) else get(f"{GF}{slug}/events/{ev.get('id')}/competitions/{comp.get('id')}/competitors?limit=200")
+        items = (cl or {}).get("items", [])
+    rows = sorted([c for c in items if c.get("order")], key=lambda c: c["order"])[:10]
+    def one(c):
+        a = get(ref(c.get("athlete"))) or {}
+        sc = get(ref(c.get("score"))) or {}
+        return [c["order"], a.get("fullName") or a.get("displayName") or "?", str(sc.get("displayValue") or sc.get("value") or "")]
+    return pmap(one, rows, 6)
+
+def sync_golf(old_rows):
+    """PGA Tour and LIV tournaments: dates, TV, and (once play starts) the top 10 / winner."""
+    today = datetime.now(ET).date()
+    rng = f"{today - timedelta(days=8):%Y%m%d}-{today + timedelta(days=150):%Y%m%d}"
+    prev = {(r[0], r[3]): r for r in old_rows}
+    out = []
+    for slug, tour in (("pga", "pga"),):
+        lst = get(GF + f"{slug}/events?dates={rng}&limit=100")
+        for it in (lst or {}).get("items", []):
+            ev = get(ref(it))
+            if not ev:
+                continue
+            comps = ev.get("competitions") or []
+            comp = comps[0] if comps else None
+            if not comp or not ev.get("date"):
+                continue
+            # ESPN dates golf by day (midnight UTC-ish): take the calendar date as given
+            start = parse_dt(ev["date"]).astimezone(ET).date()
+            end = parse_dt(ev.get("endDate") or ev["date"]).astimezone(ET).date()
+            name = ev.get("name") or ev.get("shortName") or "Tournament"
+            if name.startswith("TBD"):
+                continue
+            old = prev.get((tour, name))
+            st = get(ref(comp.get("status")), quiet=True) or {}
+            ty = st.get("type") or {}
+            # ESPN also reports "post" after each round, so only trust it once the last day is done
+            if today > end or (today == end and (ty.get("completed") or ty.get("state") == "post")):
+                state = "post"
+            elif today >= start:
+                state = "in"
+            else:
+                state = "pre"
+            net = golf_net(comp)
+            venue = ""
+            vref = (ev.get("venues") or [{}])[0]
+            if ref(vref):
+                venue = (get(ref(vref), quiet=True) or {}).get("fullName", "")
+            top = []
+            if state == "post" and old and old[6] == "post" and old[7]:
+                top = old[7]
+            elif state in ("in", "post"):
+                top = golf_top(slug, ev, comp)
+            if top and sum(1 for t in top if t[1] == "?") > len(top) // 2:
+                top = []  # team events (Presidents Cup) have no per-player leaderboard here
+            if state == "post" and old and old[6] == "post" and old[7] and not top:
+                top = old[7]
+            if state == "post" and not top and today <= end:
+                state = "in" if today <= end else "post"
+            out.append([tour, start.isoformat(), end.isoformat(), name, venue or (old[4] if old else ""), net or (old[5] if old else ""), state, top])
+    return out
+
 # ---------------------------------------------------------------- rosters
 POS = {"OT": "OL", "G": "OL", "C": "OL", "OG": "OL", "T": "OL", "DE": "DL", "DT": "DL", "NT": "DL", "OLB": "LB", "ILB": "LB", "MLB": "LB",
        "CB": "DB", "S": "DB", "FS": "DB", "SS": "DB", "SAF": "DB", "PK": "K", "H": "LS"}
@@ -383,9 +466,16 @@ def main():
     races += racing_results(names, known)
     races = [r for r in races if r[0] >= cutoff]
 
-    data = dict(updated=stamp(), schedAt=sched_at, sched=sched, finals=finals, spreads=spreads, R=R, races=races,
+    cutoff_g = (today - timedelta(days=21)).isoformat()
+    try:
+        golf = [r for r in sync_golf(old.get("golf", [])) if r[2] >= cutoff_g]
+    except Exception as e:  # golf must never break the rest of the update
+        ERRORS.append("golf: " + repr(e)[:80])
+        golf = old.get("golf", [])
+
+    data = dict(updated=stamp(), schedAt=sched_at, sched=sched, finals=finals, spreads=spreads, R=R, races=races, golf=golf,
                 stats=dict(events=len(evs), matched=len(matched), finals=len(finals), spreads=len(spreads), sched=len(sched),
-                           races=len(races), poll=poll), errors=ERRORS[:12])
+                           races=len(races), golf=len(golf), poll=poll), errors=ERRORS[:12])
     json.dump(names, open(npath, "w"), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     cmp = lambda d: json.dumps({k: v for k, v in d.items() if k not in ("updated", "stats", "errors", "schedAt")}, sort_keys=True)
     if not (old and old.get("stats", {}).get("events") and cmp(old) == cmp(data) and old.get("schedAt") == data["schedAt"]):
