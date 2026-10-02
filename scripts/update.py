@@ -477,8 +477,11 @@ def main():
                 stats=dict(events=len(evs), matched=len(matched), finals=len(finals), spreads=len(spreads), sched=len(sched),
                            races=len(races), golf=len(golf), poll=poll), errors=ERRORS[:12])
     json.dump(names, open(npath, "w"), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
-    cmp = lambda d: json.dumps({k: v for k, v in d.items() if k not in ("updated", "stats", "errors", "schedAt")}, sort_keys=True)
-    if not (old and old.get("stats", {}).get("events") and cmp(old) == cmp(data) and old.get("schedAt") == data["schedAt"]):
+    data["updatedAt"] = now.isoformat()
+    cmp = lambda d: json.dumps({k: v for k, v in d.items() if k not in ("updated", "updatedAt", "stats", "errors", "schedAt")}, sort_keys=True)
+    fresh = old.get("updatedAt") and (now - datetime.fromisoformat(old["updatedAt"])).total_seconds() < 50 * 60
+    # nothing changed: skip the commit, but still stamp the file about once an hour so the app's "Updated" time is honest
+    if not (old and old.get("stats", {}).get("events") and cmp(old) == cmp(data) and old.get("schedAt") == data["schedAt"] and fresh):
         json.dump(data, open(path, "w"), ensure_ascii=False, separators=(",", ":"))
         print("wrote data.json", data["stats"], ERRORS[:5])
     else:
