@@ -43,6 +43,7 @@ h1{font-style:italic;text-transform:uppercase;letter-spacing:.03em;white-space:n
 .t10 li{counter-increment:p;display:flex;gap:8px;align-items:baseline;padding:5px 0;border-top:1px solid var(--line);font-size:.92rem}
 .t10 li::before{content:counter(p);font-weight:800;min-width:1.4em;color:var(--muted)}
 .t10 li b{white-space:nowrap}
+.t10 li em.gap{font-style:normal;font-weight:700;font-size:.82rem;color:var(--accent);white-space:nowrap}
 .t10 li span{color:var(--muted);font-size:.8rem;margin-left:auto;text-align:right}
 .score{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:4px;font-weight:600;font-size:.98rem;color:var(--muted)}
 .score .w{color:var(--fg);font-weight:800}
@@ -413,7 +414,7 @@ function card(g,words,now){
   }
   if(g.race){
     const w=g.race[0],open=openR.has(g.i);
-    const rows=g.race.map((t,n)=>`<li><b>${t[0]}</b><span>${esc(t[1])}</span></li>`).join("");
+    const rows=g.race.map((t,n)=>`<li><b>${t[0]}</b>${t[2]?`<em class="gap">${esc(t[2])}</em>`:""}<span>${esc(t[1])}</span></li>`).join("");
     return `<article class="game race past"><span class="bar ${g.lg}"></span><div class="info">
       <div class="meta"><span class="t">FINAL</span><span class="lg ${g.lg}">${LEAGUE[g.lg]}${g.sub&&g.sub!=="cup"?" · "+SUBS[g.sub].replace(" Series",""):""}</span></div>
       <div class="ev">${hl(g.ev,words.length===1?words[0]:"")}</div>

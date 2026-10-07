@@ -233,10 +233,53 @@ def sync_racing(names, static_rows, xup):
                 out.append(["", iso, 210 if lg == "nascar" else 120, lg, ev.get("name", "Race"), venue, net, sub if lg == "nascar" else ""])
     return out
 
+NASCAR_FEED = "https://cf.nascar.com/"
+NASCAR_SERIES = {"cup": 1, "oreilly": 2, "truck": 3}
+
+def lap_gap(n):
+    return "+%d lap%s" % (n, "" if n == 1 else "s")
+
+def nascar_gaps(sub, date):
+    """{car number: gap string} for a finished NASCAR race, from NASCAR's own results feed (ESPN has no gaps for NASCAR)."""
+    sid = NASCAR_SERIES.get(sub)
+    if not sid:
+        return {}
+    rl = get(f"{NASCAR_FEED}cacher/2026/{sid}/race_list_basic.json", quiet=True)
+    race = next((r for r in (rl if isinstance(rl, list) else []) if (r.get("race_date") or "")[:10] == date), None)
+    if not race:
+        return {}
+    lf = get(f"{NASCAR_FEED}live/feeds/series_{sid}/{race['race_id']}/live_feed.json", quiet=True) or {}
+    veh = sorted([v for v in lf.get("vehicles", []) if v.get("running_position")], key=lambda v: v["running_position"])
+    if not veh:
+        return {}
+    lead_laps = veh[0].get("laps_completed") or 0
+    out = {}
+    for v in veh[1:]:
+        down = lead_laps - (v.get("laps_completed") or 0)
+        d = v.get("delta")
+        if down > 0:
+            out[str(v.get("vehicle_number"))] = lap_gap(down)
+        elif isinstance(d, (int, float)) and d > 0:
+            out[str(v.get("vehicle_number"))] = "+%.3f" % d
+    return out
+
+def f1_gap(c):
+    """Gap to the winner for one F1 classification row, from ESPN's stats."""
+    st = get(ref(c.get("statistics")), quiet=True) or {}
+    stats = {x.get("name"): x for cat in (st.get("splits") or {}).get("categories", []) for x in cat.get("stats", [])}
+    laps = (stats.get("behindLaps") or {}).get("value") or 0
+    if laps > 0:
+        return lap_gap(int(laps))
+    t = stats.get("behindTime") or {}
+    if (t.get("value") or 0) > 0:
+        dv = str(t.get("displayValue") or "")
+        return dv if dv.startswith("+") else "+" + dv
+    return ""
+
 def racing_results(names, known):
     """Winner + top 10 for races that have finished and are not already in the app."""
     today = datetime.now(ET).date()
-    rng = f"{today - timedelta(days=6):%Y%m%d}-{today:%Y%m%d}"
+    rng = f"{today - timedelta(days=14):%Y%m%d}-{today:%Y%m%d}"
     res = []
     for slug, lg, sub in (("nascar-premier", "nascar", "cup"), ("nascar-secondary", "nascar", "oreilly"),
                           ("nascar-truck", "nascar", "truck"), ("f1", "f1", "")):
@@ -264,6 +307,7 @@ def racing_results(names, known):
             rows = [c for c in items if c.get("order")]
             rows.sort(key=lambda c: c["order"])
             top = []
+            gaps = nascar_gaps(sub, d) if lg == "nascar" else {}
             for c in rows[:10]:
                 a = get(ref(c.get("athlete"))) or {}
                 v = c.get("vehicle") or {}
@@ -271,7 +315,13 @@ def racing_results(names, known):
                     team = ("#" + str(v.get("number")) if v.get("number") else "") + (" " + v["team"] if v.get("team") else "") + (" " + v["manufacturer"] if v.get("manufacturer") else "")
                 else:
                     team = v.get("manufacturer") or v.get("team") or ""
-                top.append([a.get("fullName") or a.get("displayName") or "?", team.strip()])
+                if c.get("order") == 1:
+                    gap = ""
+                elif lg == "nascar":
+                    gap = gaps.get(str(v.get("number")), "")
+                else:
+                    gap = f1_gap(c)
+                top.append([a.get("fullName") or a.get("displayName") or "?", team.strip(), gap])
             if len(top) < 3:
                 continue
             venue = (get(ref((ev.get("venues") or [{}])[0])) or {}).get("fullName", "")
@@ -462,6 +512,8 @@ def main():
     finals = [f for f in finals if f[0] >= cutoff]
 
     races = old.get("races", [])
+    redo_from = (today - timedelta(days=14)).strftime("%Y-%m-%d")
+    races = [r for r in races if not (r[0] >= redo_from and r[5] and len(r[5][0]) < 3)]  # recent races saved before gaps existed: fetch again
     known = set(static_races) | {(r[1], r[2], r[0]) for r in races}
     races += racing_results(names, known)
     races = [r for r in races if r[0] >= cutoff]
