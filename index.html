@@ -475,7 +475,7 @@ function render(){
       ?`<div class="empty"><b>No teams saved yet</b>Tap a team name under any game to add it here.</div>`
       :`<div class="empty"><b>No games found</b>${fantasyOn()?"None of your fantasy players have a game in this window. Tap Pick players to change your team.<br>":""}Try a team name like "Browns", a city like "Cleveland", or a channel like "ESPN".</div>`;
   }else{
-    html=(fin.length?`<h3 class="resh">Finished games</h3>`+days(fin,now,words,false):"")
+    html=(fin.length?`<h3 class="resh">Finished ${unit}s</h3>`+days(fin,now,words,false):"")
       +`<div id="upnext"></div>`
       +(up.length?days(up,now,words,false):`<div class="nomatch">${filter==="nascar"&&sub==="arca"?"ARCA's season is over (finale was Sep 25).":"No upcoming "+unit+"s match."}</div>`);
   }
