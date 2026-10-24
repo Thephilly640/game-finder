@@ -151,6 +151,8 @@ def ap_ranks(names):
 NATIONAL_OK = {"ABC", "CBS", "NBC / Peacock", "NBC", "FOX", "ESPN", "ESPN2", "ESPNU", "FS1", "FS2", "Big Ten Network", "SEC Network",
                "ACC Network", "CBS Sports Network", "The CW", "TNT / truTV", "USA Network", "ESPN / ABC"}
 
+FOX_FIX = re.compile(r"\bFox\b")
+
 def placeholder(iso):
     """ESPN uses 00:00 / 23:59 ET when the real kickoff time is not set yet."""
     return iso[11:16] in ("00:00", "23:59", "00:01")
@@ -187,8 +189,10 @@ def sync_football(lg, slug, days, names, static_rows):
         # a game the app does not have yet (skip it if a team already has a game that day under another spelling)
         if any((t, parse_dt(e["iso"]).date()) in have_day for t in teams):
             return None
-        if lg == "ncaa" and not (is_tv and net in NATIONAL_OK):
-            return None
+        if lg == "ncaa":
+            net = FOX_FIX.sub("FOX", net)  # ESPN spells it "Fox"; the allowlist and static rows use "FOX"
+            if not (is_tv and net in NATIONAL_OK):
+                return None
         sep = " vs. " if e["neutral"] else " at "
         ev = e["away"] + sep + e["home"]
         note = ""
