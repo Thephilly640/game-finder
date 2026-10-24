@@ -553,6 +553,7 @@ function render(){
     up.push(g);
   });
   fin.sort((x,y)=>x.start-y.start);
+  up.sort((x,y)=>x.start-y.start||x.i-y.i);
   $("subrow").hidden=filter!=="nascar";$("sub").value=sub;
   $("nflrow").hidden=filter!=="nfl";$("nsub").value=nsub;
   $("fbar").hidden=!fantasyOn();$("fcount").textContent=fteam.size+" player"+(fteam.size===1?"":"s");
