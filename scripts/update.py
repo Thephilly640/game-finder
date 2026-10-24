@@ -55,10 +55,15 @@ def parse_dt(iso): return datetime.fromisoformat(iso.replace("Z", "+00:00"))
 def et_date(iso): return parse_dt(iso).astimezone(ET).strftime("%Y-%m-%d")
 def et_iso(iso): return parse_dt(iso).astimezone(ET).isoformat(timespec="seconds")
 def split_teams(ev): return [t.strip() for t in re.split(r"\s+(?:at|vs\.)\s+", re.sub(r"\(.*?\)", "", ev))]
-def tid_of(url): return re.search(r"/teams/(\d+)", url).group(1)
+def tid_of(url):
+    m = re.search(r"/teams/(\d+)", url or "")  # TBD / placeholder teams have no numeric id
+    return m.group(1) if m else ""
 
 def team_name(url, lg, names):
-    key = lg + ":" + tid_of(url)
+    tid = tid_of(url)
+    if not tid:
+        return ""
+    key = lg + ":" + tid
     if key not in names:
         t = get(url) or {}
         n = (t.get("name") if lg == "nfl" else t.get("location")) or ""
