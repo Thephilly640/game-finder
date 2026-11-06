@@ -397,6 +397,10 @@ XRES.forEach(([d,sub,ev,venue,top])=>{
 games.forEach(g=>{if(!g.sub)g.sub="cup"});
 let nsub="all",fteam=new Set(),fextra=[],pkTeams=null,sub="cup",view="list",modalIds=null,modalHead="";
 let filter="all",showPast=true,anchorPending=true,mine=new Set();
+// Keep the list on the next game until the person scrolls or taps. Late data loads and resuming the app used to leave it stuck on old games.
+let touched=false,hiddenAt=0;
+try{history.scrollRestoration="manual"}catch(e){}
+["pointerdown","wheel","touchmove","keydown"].forEach(t=>addEventListener(t,()=>{touched=true},{passive:true,capture:true}));
 try{mine=new Set(JSON.parse(localStorage.getItem("myteams")||"[]"))}catch(e){}
 try{filter=localStorage.getItem("filter")||"all"}catch(e){}
 try{nsub=localStorage.getItem("fa_nsub")==="fantasy"?"fantasy":"all";fteam=new Set(JSON.parse(localStorage.getItem("fa_fteam")||"[]"));fextra=JSON.parse(localStorage.getItem("fa_fextra")||"[]")}catch(e){}
@@ -559,6 +563,7 @@ function days(list,now,words,desc){
   return keys.map(k=>{const gs=d[k];return `<section class="day"><h2>${dayLbl(gs[0].start)}</h2><div class="list">${gs.map(g=>card(g,words,now)).join("")}</div></section>`}).join("");
 }
 function render(){
+  if(!touched&&view==="list")anchorPending=true;
   const q=$("q").value.trim().toLowerCase(),now=new Date(),horizon=now.getTime()+HORIZON_DAYS*864e5;
   $("clear").hidden=!q;
   let pastN=0;
@@ -833,7 +838,11 @@ async function loadRosters(){
   }catch(e){}
 }
 loadLive().then(pollLive);loadRosters();setInterval(loadLive,10*60*1000);setInterval(pollLive,LIVE_MS);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){loadLive();pollLive()}});
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){hiddenAt=Date.now();return}
+  if(hiddenAt&&Date.now()-hiddenAt>5*60*1000){touched=false;anchorPending=true;render()}
+  loadLive();pollLive();
+});
 
 
 // Usage counts (GoatCounter, no cookies, no personal info): installs and opens from the home screen
