@@ -89,17 +89,17 @@ h1{font-family:var(--display);font-size:1.9rem;line-height:1;margin:0;letter-spa
 .vb{font:700 .75rem var(--body);letter-spacing:.05em;text-transform:uppercase;border:1.5px solid var(--line);background:var(--card);color:var(--fg);padding:6px 12px;border-radius:8px;cursor:pointer}
 .vb[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .cal{margin-top:6px}
-.cal-h,.cal-w{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
-.cal-h{margin-bottom:3px;text-align:center;font:700 .62rem var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.cal-w{margin-bottom:3px}
-.cal-d{background:var(--card);border:1px solid var(--line);border-radius:6px;min-height:92px;padding:3px 2px;display:flex;flex-direction:column;gap:2px;min-width:0}
-.cal-d.today{border:2px solid var(--accent)}
-.cal-d.old{opacity:.8}
-.cal-n{font:700 .68rem var(--body);color:var(--muted);padding-left:2px}
-.cal-d.today .cal-n{color:var(--accent)}
-.cp{display:block;width:100%;text-align:left;font:700 .54rem/1.15 var(--body);border:0;border-left:3px solid var(--fg);background:var(--bg);color:var(--fg);border-radius:3px;padding:2px 2px 2px 3px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cal table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:3px}
+.cal th{text-align:center;font:700 .62rem var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:0 0 3px}
+.cal td{vertical-align:top;height:92px;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:3px 2px;overflow:hidden}
+.cal td.today{border:2px solid var(--accent)}
+.cal td.old .cal-n{opacity:.6}
+.cal-n{display:block;font:700 .68rem var(--body);color:var(--muted);padding-left:2px;margin-bottom:2px}
+.cal td.today .cal-n{color:var(--accent)}
+.cp{display:block;font:700 .54rem/1.15 var(--body);border-left:3px solid var(--fg);background:var(--bg);color:var(--fg);border-radius:3px;padding:2px 2px 2px 3px;margin-bottom:2px;cursor:pointer;overflow:hidden;white-space:nowrap}
+.cp span{display:block;overflow:hidden}
 .cp.golf{border-color:var(--golf)}.cp.nfl{border-color:var(--nfl)}.cp.ncaa{border-color:var(--ncaa)}.cp.nba{border-color:var(--nba)}.cp.nascar{border-color:var(--nascar)}.cp.f1{border-color:var(--f1)}
-.cp.fin{opacity:.6}
+.cp.fin{color:var(--muted)}
 .pastbtn[hidden]{display:none}
 .fc{display:inline-flex;align-items:center;justify-content:center;width:1.25em;height:1.25em;border:2px solid currentColor;border-radius:50%;font-weight:900;font-size:.8em;line-height:1;margin-right:6px;flex:none}
 .tb.fb{display:inline-flex;align-items:center}
@@ -125,8 +125,7 @@ h1{font-family:var(--display);font-size:1.9rem;line-height:1;margin:0;letter-spa
 .spr{font-size:.82rem;color:var(--muted);margin-top:4px}
 .spr b{color:var(--fg)}
 .cp-more{display:block;font:700 .54rem var(--body);color:var(--muted);text-align:center}
-.cp-show{margin-top:auto;font:700 .6rem var(--body);letter-spacing:.04em;text-transform:uppercase;border:1.5px solid var(--accent);color:var(--accent);background:var(--card);border-radius:5px;padding:3px 0;cursor:pointer;width:100%}
-.cp.more{border-left-color:var(--muted);color:var(--muted);text-align:center;padding-left:2px}
+.cp-show{display:block;width:100%;margin-top:2px;font:700 .6rem var(--body);letter-spacing:.04em;text-transform:uppercase;border:1.5px solid var(--accent);color:var(--accent);background:var(--card);border-radius:5px;padding:3px 0;cursor:pointer}
 .cal-note{font-size:.72rem;color:var(--muted);margin:8px 2px 0;text-align:center}
 .mdl{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center}
 .mdl[hidden]{display:none}
@@ -548,24 +547,24 @@ function calHtml(list,now){
   const todayK=dayKey(now),parts=todayK.split("-").map(Number);
   const base=new Date(Date.UTC(parts[0],parts[1]-1,parts[2]));
   base.setUTCDate(base.getUTCDate()-base.getUTCDay());
-  const by={};list.forEach(g=>(by[dayKey(g.start)]??=[]).push(g));
-  let h='<div class="cal"><div class="cal-h">'+["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>`<span>${d}</span>`).join("")+'</div>';
+  const by={};list.forEach(g=>{const k=dayKey(g.start);(by[k]=by[k]||[]).push(g)});
   const MAXP=4;
+  let h='<div class="cal"><table><thead><tr>'+["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>`<th>${d}</th>`).join("")+'</tr></thead><tbody>';
   for(let w=0;w<2;w++){
-    h+='<div class="cal-w">';
+    h+='<tr>';
     for(let d=0;d<7;d++){
       const dt=new Date(base.getTime());dt.setUTCDate(base.getUTCDate()+w*7+d);
       const k=dt.toISOString().slice(0,10),gs=(by[k]||[]).slice().sort((a,b)=>(a.fin?0:1)-(b.fin?0:1)||a.start-b.start);
       const lbl=(dt.getUTCDate()===1||(w===0&&d===0)?MONTHS[dt.getUTCMonth()]+" ":"")+dt.getUTCDate();
-      h+=`<div class="cal-d${k===todayK?" today":""}${k<todayK?" old":""}"><span class="cal-n">${lbl}</span>`;
-      gs.slice(0,MAXP).forEach(g=>{h+=`<button class="cp ${g.lg}${g.fin?" fin":""}" data-g="${g.i}" aria-label="${esc(g.ev)}">${esc(pillText(g)).replace("\n","<br>")}</button>`});
+      h+=`<td class="${k===todayK?"today":""}${k<todayK?" old":""}"><span class="cal-n">${lbl}</span>`;
+      gs.slice(0,MAXP).forEach(g=>{h+=`<div class="cp ${g.lg}${g.fin?" fin":""}" role="button" data-g="${g.i}" aria-label="${esc(g.ev)}">${pillText(g).split("\n").map(s=>`<span>${esc(s)}</span>`).join("")}</div>`});
       if(gs.length>MAXP)h+=`<span class="cp-more">+${gs.length-MAXP} more</span>`;
-      if(gs.length)h+=`<button class="cp-show" data-day="${k}" aria-label="Show all ${gs.length} on ${lbl}">Show</button>`;
-      h+='</div>';
+      if(gs.length)h+=`<button type="button" class="cp-show" data-day="${k}" aria-label="Show all ${gs.length} on ${lbl}">Show</button>`;
+      h+='</td>';
     }
-    h+='</div>';
+    h+='</tr>';
   }
-  return h+'<p class="cal-note">Tap a game, or Show, for details. Dimmed games are finished.</p></div>';
+  return h+'</tbody></table><p class="cal-note">Tap a game, or Show, for details. Dimmed games are finished.</p></div>';
 }
 let pkQ="";
 function pkRow(x){const on=fteam.has(x.id);return `<button class="prow${on?" on":""}" data-pid="${esc(x.id)}" aria-pressed="${on}"><span class="fc">F</span><span>${esc(x.n)}</span><small>${esc(x.p||"")} · ${esc(x.t)}</small></button>`}
