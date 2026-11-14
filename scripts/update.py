@@ -2,7 +2,7 @@
 """Automatic data refresh for Game Finder. Runs on GitHub every 15 minutes (no one has to ask).
 Pulls from ESPN's core data feed (standard library only) and writes data.json (+ rosters.json daily):
   * every run: finished scores + records, AP ranks, spreads for the next ~8 days
-  * about every 3 hours: schedule sync (new games, time changes, TV channels) for NFL, college, NASCAR, F1
+  * about every 3 hours: schedule sync (new games, time changes, TV channels) for NFL, college, NBA, NASCAR, F1
   * racing results (winner + top 10) as races finish
   * once a day: rosters for every NFL team (Fantasy)
 Anything it cannot match is skipped, never guessed."""
@@ -17,11 +17,15 @@ CORE = "https://sports.core.api.espn.com/v2/sports/"
 FB = CORE + "football/leagues/"
 RC = CORE + "racing/leagues/"
 GF = CORE + "golf/leagues/"
+BB = CORE + "basketball/leagues/"
+NBA_DAYS = 14  # NBA shows the next 14 days (about 12 games a day)
+NBA_KEEP = 7   # and keeps 7 days of finished games
 ALIAS = {"Massachusetts": "UMass", "Connecticut": "UConn", "Hawai'i": "Hawaii", "San José State": "San Jose State",
          "App State": "Appalachian State"}
 NET = {"USA Net": "USA Network", "CBSSN": "CBS Sports Network", "FS1": "FS1", "BTN": "Big Ten Network",
        "SECN": "SEC Network", "ACCN": "ACC Network", "truTV": "TNT / truTV", "TNT": "TNT / truTV", "NFLN": "NFL Network",
        "NFL Net": "NFL Network", "Prime": "Prime Video", "CW": "The CW"}
+NBA_NATIONAL = {"ABC", "ESPN", "ESPN2", "NBC", "NBC / Peacock", "Peacock", "NBCSN", "NBCSN / NBC", "NBA TV", "Prime Video"}
 ERRORS = []
 _cache = {}
 
@@ -66,7 +70,7 @@ def team_name(url, lg, names):
     key = lg + ":" + tid
     if key not in names:
         t = get(url) or {}
-        n = (t.get("name") if lg == "nfl" else t.get("location")) or ""
+        n = (t.get("name") if lg in ("nfl", "nba") else t.get("location")) or ""
         if n:
             names[key] = ALIAS.get(n, n)
     return names.get(key, "")
@@ -83,8 +87,10 @@ def network(comp, lg=""):
         n = NET.get(n, n)
         if n and n not in names:
             names.append(n)
+    if lg == "nba":  # ESPN also lists every team's local stream (Bucks App, DAZN, ClipperVision...): show national channels only
+        names = [n for n in names if n in NBA_NATIONAL]
     s = " / ".join(names)
-    if lg == "nfl" and s == "NBC":
+    if lg in ("nfl", "nba") and s == "NBC":
         s = "NBC / Peacock"
     return s, bool(tv)
 
@@ -162,10 +168,10 @@ def placeholder(iso):
     """ESPN uses 00:00 / 23:59 ET when the real kickoff time is not set yet."""
     return iso[11:16] in ("00:00", "23:59", "00:01")
 
-def sync_football(lg, slug, days, names, static_rows):
+def sync_football(lg, slug, days, names, static_rows, base=FB):
     today = datetime.now(ET).date()
     rng = f"{today:%Y%m%d}-{today + timedelta(days=days):%Y%m%d}"
-    lst = get(FB + f"{slug}/events?dates={rng}&limit=600")
+    lst = get(base + f"{slug}/events?dates={rng}&limit=600")
     urls = [ref(i) for i in (lst or {}).get("items", []) if ref(i)]
     evs = [x for x in pmap(lambda u: read_event(u, lg, names), urls) if x]
     out = []
@@ -201,7 +207,7 @@ def sync_football(lg, slug, days, names, static_rows):
         sep = " vs. " if e["neutral"] else " at "
         ev = e["away"] + sep + e["home"]
         note = ""
-        return ["", e["iso"], 195 if lg == "nfl" else 210, lg, ev, note, net, ""]
+        return ["", e["iso"], {"nfl": 195, "nba": 150}.get(lg, 210), lg, ev, note, net, ""]
     return [r for r in pmap(one, evs) if r]
 
 def sync_racing(names, static_rows, xup):
@@ -465,11 +471,12 @@ def main():
 
     sched = old.get("sched", [])
     sched_at = old.get("schedAt", "")
-    if older("schedAt", 2.9):
+    if older("schedAt", 2.9) or "nba2" not in old.get("schedLg", []):  # also runs once to pick up a newly added league
         base_rows = G
         new = []
         new += sync_football("nfl", "nfl", 100, names, base_rows)
         new += sync_football("ncaa", "college-football", 45, names, base_rows)
+        new += sync_football("nba", "nba", NBA_DAYS, names, base_rows, BB)
         new += sync_racing(names, base_rows, XUP)
         if new or not sched:
             sched = new
@@ -484,7 +491,7 @@ def main():
     eff += [[r[1], r[2], r[3], r[4], r[5], r[6]] for r in sched if not r[0]]
     games = {}
     for g in eff:
-        if g[2] in ("nfl", "ncaa"):
+        if g[2] in ("nfl", "ncaa", "nba"):
             t = split_teams(g[3])
             if len(t) == 2:
                 games[(et_date(g[0]), frozenset(t))] = g
@@ -492,8 +499,8 @@ def main():
     today = now.date()
     rng = f"{today - timedelta(days=1):%Y%m%d}-{today + timedelta(days=8):%Y%m%d}"
     evs = []
-    for lg, slug in (("nfl", "nfl"), ("ncaa", "college-football")):
-        lst = get(FB + f"{slug}/events?dates={rng}&limit=600")
+    for lg, slug, base in (("nfl", "nfl", FB), ("ncaa", "college-football", FB), ("nba", "nba", BB)):
+        lst = get(base + f"{slug}/events?dates={rng}&limit=600")
         urls = [ref(i) for i in (lst or {}).get("items", []) if ref(i)]
         evs += [x for x in pmap(lambda u: read_event(u, lg, names), urls) if x]
     matched = [e for e in evs if (e["date"], frozenset((e["away"], e["home"]))) in games]
@@ -501,7 +508,7 @@ def main():
 
     finals = old.get("finals", [])
     seen = {(f[0], frozenset((f[2], f[4]))) for f in finals}
-    spreads, R = {}, {"nfl": {}, "ncaa": {}}
+    spreads, R = {}, {"nfl": {}, "ncaa": {}, "nba": {}}
     for e in matched:
         key = (e["date"], frozenset((e["away"], e["home"])))
         g = games[key]
@@ -518,7 +525,8 @@ def main():
     for team, v in R["ncaa"].items():
         v[1] = ranks.get(team)
     cutoff = (today - timedelta(days=45)).strftime("%Y-%m-%d")
-    finals = [f for f in finals if f[0] >= cutoff]
+    nba_cut = (today - timedelta(days=NBA_KEEP)).strftime("%Y-%m-%d")
+    finals = [f for f in finals if f[0] >= (nba_cut if f[1] == "nba" else cutoff)]
 
     races = old.get("races", [])
     redo_from = (today - timedelta(days=14)).strftime("%Y-%m-%d")
@@ -534,7 +542,7 @@ def main():
         ERRORS.append("golf: " + repr(e)[:80])
         golf = old.get("golf", [])
 
-    data = dict(updated=stamp(), schedAt=sched_at, sched=sched, finals=finals, spreads=spreads, R=R, races=races, golf=golf,
+    data = dict(updated=stamp(), schedAt=sched_at, schedLg=["nba2"], sched=sched, finals=finals, spreads=spreads, R=R, races=races, golf=golf,
                 stats=dict(events=len(evs), matched=len(matched), finals=len(finals), spreads=len(spreads), sched=len(sched),
                            races=len(races), golf=len(golf), poll=poll), errors=ERRORS[:12])
     json.dump(names, open(npath, "w"), ensure_ascii=False, sort_keys=True, separators=(",", ":"))

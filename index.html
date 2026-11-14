@@ -16,7 +16,7 @@
   --bg:#f6eee1;--card:#fffaf2;--fg:#2a1b12;--muted:#7a6454;--line:#e2d2bb;--field:#fffaf2;
   --accent:#c2410c;--star:#d9930b;--live:#c72e2e;--glow:.5;
   --sky1:#f6eee1;--sky2:#f6dcbc;--sky3:#efbf93;--r1:#d8a98c;--r2:#c08463;--r3:#8e4a26;--r3o:.55;--fgo:.62;--ground:#7a4a2a;--stone:#7a6a5a;--stonelit:#c9a27a;--staro:0;--moono:0;--smoke:#9a8a7c;--smokeo:.14;
-  --golf:#6a42a8;--nascar:#b3321d;--f1:#1d5fb8;--nfl:#4a6b2a;--ncaa:#a0600f;
+  --golf:#6a42a8;--nascar:#b3321d;--f1:#1d5fb8;--nfl:#4a6b2a;--ncaa:#a0600f;--nba:#0f766e;
   --display:"Barlow Condensed","Arial Narrow",sans-serif;--body:"Barlow",system-ui,-apple-system,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
@@ -24,13 +24,13 @@
   --accent:#ff8a3d;--star:#f5b942;--live:#ff6b6b;--glow:.95;
   --sky1:#17100b;--sky2:#24141a;--sky3:#4a2116;--r1:#2e1a1e;--r2:#26150f;--r3:#1c100a;--r3o:.9;--fgo:.85;--ground:#140c07;--stone:#3a322c;--stonelit:#a8683a;--staro:.85;--moono:.9;--smoke:#6b5d55;--smokeo:.2;
   --past:#100a07;--pastfg:#9a8775;
-  --golf:#c9a0e8;--nascar:#ff8566;--f1:#78aef5;--nfl:#9bcf6a;--ncaa:#e8b45c;color-scheme:dark}}
+  --golf:#c9a0e8;--nascar:#ff8566;--f1:#78aef5;--nfl:#9bcf6a;--ncaa:#e8b45c;--nba:#4fd1c5;color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#000;--card:#231812;--fg:#f4e7d4;--muted:#b9a38f;--line:#3a2a1e;--field:#2c1f16;
   --accent:#ff8a3d;--star:#f5b942;--live:#ff6b6b;--glow:.95;
   --sky1:#17100b;--sky2:#24141a;--sky3:#4a2116;--r1:#2e1a1e;--r2:#26150f;--r3:#1c100a;--r3o:.9;--fgo:.85;--ground:#140c07;--stone:#3a322c;--stonelit:#a8683a;--staro:.85;--moono:.9;--smoke:#6b5d55;--smokeo:.2;
   --past:#100a07;--pastfg:#9a8775;
-  --golf:#c9a0e8;--nascar:#ff8566;--f1:#78aef5;--nfl:#9bcf6a;--ncaa:#e8b45c;color-scheme:dark}
+  --golf:#c9a0e8;--nascar:#ff8566;--f1:#78aef5;--nfl:#9bcf6a;--ncaa:#e8b45c;--nba:#4fd1c5;color-scheme:dark}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.35;-webkit-tap-highlight-color:transparent}
 .app{max-width:560px;margin:0 auto}
@@ -98,7 +98,7 @@ h1{font-family:var(--display);font-size:1.9rem;line-height:1;margin:0;letter-spa
 .cal-n{font:700 .68rem var(--body);color:var(--muted);padding-left:2px}
 .cal-d.today .cal-n{color:var(--accent)}
 .cp{display:block;width:100%;text-align:left;font:700 .54rem/1.15 var(--body);border:0;border-left:3px solid var(--fg);background:var(--bg);color:var(--fg);border-radius:3px;padding:2px 2px 2px 3px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.cp.golf{border-color:var(--golf)}.cp.nfl{border-color:var(--nfl)}.cp.ncaa{border-color:var(--ncaa)}.cp.nascar{border-color:var(--nascar)}.cp.f1{border-color:var(--f1)}
+.cp.golf{border-color:var(--golf)}.cp.nfl{border-color:var(--nfl)}.cp.ncaa{border-color:var(--ncaa)}.cp.nba{border-color:var(--nba)}.cp.nascar{border-color:var(--nascar)}.cp.f1{border-color:var(--f1)}
 .cp.fin{opacity:.6}
 .pastbtn[hidden]{display:none}
 .fc{display:inline-flex;align-items:center;justify-content:center;width:1.25em;height:1.25em;border:2px solid currentColor;border-radius:50%;font-weight:900;font-size:.8em;line-height:1;margin-right:6px;flex:none}
@@ -138,6 +138,8 @@ h1{font-family:var(--display);font-size:1.9rem;line-height:1;margin:0;letter-spa
 .chip{flex:none;font:700 .8rem var(--body);letter-spacing:.05em;text-transform:uppercase;border:1.5px solid var(--line);background:var(--card);color:var(--fg);padding:8px 13px;border-radius:999px;cursor:pointer}
 .chip[data-f="nfl"]{border-color:var(--nfl);color:var(--nfl)}
 .chip[data-f="ncaa"]{border-color:var(--ncaa);color:var(--ncaa)}
+.chip[data-f="nba"]{border-color:var(--nba);color:var(--nba)}
+.chip[data-f="nba"][aria-pressed="true"]{background:var(--nba);color:var(--bg);border-color:var(--nba)}
 .chip[data-f="golf"]{border-color:var(--golf);color:var(--golf)}
 .chip[data-f="golf"][aria-pressed="true"]{background:var(--golf);color:var(--bg);border-color:var(--golf)}
 .chip[data-f="nascar"]{border-color:var(--nascar);color:var(--nascar)}
@@ -154,12 +156,12 @@ main{padding-inline:16px;padding-block:6px 40px}
 .list{display:grid;gap:8px}
 .game{display:grid;grid-template-columns:4px 1fr auto;gap:0 12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 8px 12px 0;overflow:hidden}
 .bar{align-self:stretch;border-radius:0 3px 3px 0;margin:-12px 0}
-.bar.golf{background:var(--golf)}.bar.nascar{background:var(--nascar)}.bar.f1{background:var(--f1)}.bar.nfl{background:var(--nfl)}.bar.ncaa{background:var(--ncaa)}
+.bar.golf{background:var(--golf)}.bar.nascar{background:var(--nascar)}.bar.f1{background:var(--f1)}.bar.nfl{background:var(--nfl)}.bar.ncaa{background:var(--ncaa)}.bar.nba{background:var(--nba)}
 .info{min-width:0}
 .meta{display:flex;gap:8px;align-items:center;font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .meta .t{font-weight:700;color:var(--fg);font-size:.9rem}
 .lg{font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:.7rem}
-.lg.golf{color:var(--golf)}.lg.nascar{color:var(--nascar)}.lg.f1{color:var(--f1)}.lg.nfl{color:var(--nfl)}.lg.ncaa{color:var(--ncaa)}
+.lg.golf{color:var(--golf)}.lg.nascar{color:var(--nascar)}.lg.f1{color:var(--f1)}.lg.nfl{color:var(--nfl)}.lg.ncaa{color:var(--ncaa)}.lg.nba{color:var(--nba)}
 .live{background:var(--live);color:#fff;font-weight:700;font-size:.66rem;letter-spacing:.08em;padding:2px 6px;border-radius:4px}
 .ev{font-weight:700;font-size:1.05rem;margin-top:2px;overflow-wrap:anywhere}
 .ev mark{background:none;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
@@ -200,6 +202,7 @@ body{background:var(--bg)}
       <button class="chip" id="c-mine" data-f="mine" aria-pressed="false">★ My teams</button>
       <button class="chip" id="c-nfl" data-f="nfl" aria-pressed="false">NFL</button>
       <button class="chip" id="c-ncaa" data-f="ncaa" aria-pressed="false">College</button>
+      <button class="chip" id="c-nba" data-f="nba" aria-pressed="false">NBA</button>
       <button class="chip" id="c-golf" data-f="golf" aria-pressed="false">Golf</button>
       <button class="chip" id="c-nascar" data-f="nascar" aria-pressed="false">NASCAR</button>
       <button class="chip" id="c-f1" data-f="f1" aria-pressed="false">F1</button>
@@ -223,10 +226,10 @@ body{background:var(--bg)}
       <p id="wel-ios"><b>iPhone:</b> open this page in Safari, tap the Share button, then <b>Add to Home Screen</b>.</p>
       <p id="wel-and"><b>Android:</b> in Chrome, tap the ⋮ menu, then <b>Install app</b> (or <b>Add to home screen</b>).</p>
       <h3>3. Live scores</h3>
-      <p>While an NFL or college game is on, the score and clock update on their own.</p>
+      <p>While an NFL, college or NBA game is on, the score and clock update on their own.</p>
       <button class="go" id="wel-x" type="button">Got it</button></div></div>
     <button class="pastbtn" id="past" hidden></button>
-    <p class="foot">All times Eastern. Sunday afternoon CBS and FOX games vary by area. NFL and college show the next 30 days. College games for Oct 15–17 and Oct 22–24 aren't scheduled yet. Tap a team name under a game to save just that team to My teams. Records and rankings: <span id="asof"></span>. <span id="pasof"></span>. <span id="spasof"></span>. <span id="live"></span> NFL and college scores and game clock are live from ESPN, refreshed every 30 seconds while a game is on. Not betting advice.</p>
+    <p class="foot">All times Eastern. Sunday afternoon CBS and FOX games vary by area. NFL and college show the next 30 days. NBA shows the next 14 days. College games for Oct 15–17 and Oct 22–24 aren't scheduled yet. Tap a team name under a game to save just that team to My teams. Records and rankings: <span id="asof"></span>. <span id="pasof"></span>. <span id="spasof"></span>. <span id="live"></span> NFL and college scores and game clock are live from ESPN, refreshed every 30 seconds while a game is on. Not betting advice.</p>
     <p class="credit">Developed by: Phillip Bauman · <button class="lnk" id="help" type="button">How to use Game Finder</button></p>
     <p class="credit" id="inst" hidden><button class="lnk" id="inst-btn" type="button">Install on your home screen</button><span id="inst-help" hidden></span></p>
   </main>
@@ -261,15 +264,18 @@ const G=[["2026-10-01T20:00:00-04:00",210,"ncaa","WKU at New Mexico State","","C
 const UPDATED="Oct 1, 2026 11:19 PM ET";
 const R={"nfl":{"Bears":["2-1",null],"Bengals":["2-1",null],"Bills":["3-0",null],"Broncos":["2-1",null],"Browns":["2-1",null],"Buccaneers":["0-3",null],"Cardinals":["1-2",null],"Chargers":["0-3",null],"Chiefs":["3-0",null],"Colts":["1-2",null],"Commanders":["1-2",null],"Cowboys":["1-2",null],"Dolphins":["0-3",null],"Eagles":["2-1",null],"Falcons":["1-2",null],"49ers":["3-0",null],"Giants":["2-1",null],"Jaguars":["2-1",null],"Jets":["1-2",null],"Lions":["2-1",null],"Packers":["1-2",null],"Panthers":["1-2",null],"Patriots":["1-2",null],"Raiders":["3-0",null],"Rams":["1-2",null],"Ravens":["2-1",null],"Saints":["1-2",null],"Seahawks":["2-1",null],"Steelers":["2-1",null],"Texans":["0-3",null],"Titans":["0-3",null],"Vikings":["3-0",null]},"ncaa":{"Air Force":["2-1",null],"Alabama":["4-0",7],"Appalachian State":["3-1",null],"Arizona":["3-1",null],"Arizona State":["2-1",null],"Arkansas":["2-2",null],"Arkansas State":["2-2",null],"Army":["2-1",null],"Auburn":["3-1",null],"BYU":["3-0",10],"Ball State":["1-3",null],"Baylor":["3-1",null],"Boise State":["3-1",22],"Boston College":["2-2",null],"California":["2-2",null],"Cincinnati":["4-0",null],"Clemson":["3-1",null],"Coastal Carolina":["1-3",null],"Colorado":["2-2",null],"Colorado State":["2-2",null],"Delaware":["2-2",null],"Duke":["4-0",null],"FAU":["3-1",null],"FIU":["2-2",null],"Florida":["4-0",8],"Florida State":["2-2",null],"Fresno State":["3-1",null],"Georgia":["4-0",2],"Georgia Southern":["1-3",null],"Georgia Tech":["1-3",null],"Hawai'i":["1-3",null],"Houston":["3-1",20],"Illinois":["2-2",null],"Indiana":["4-0",6],"Iowa":["4-0",14],"Iowa State":["2-2",null],"Jacksonville State":["3-2",null],"James Madison":["4-0",null],"Kansas":["1-2",null],"Kansas State":["3-1",null],"Kennesaw State":["1-3",null],"Kentucky":["3-1",24],"LSU":["3-1",11],"Liberty":["3-1",null],"Louisville":["2-2",null],"Marshall":["3-1",null],"Maryland":["2-2",null],"McNeese":["2-3",null],"Memphis":["3-1",null],"Miami":["4-0",4],"Michigan":["3-1",null],"Michigan State":["2-2",null],"Middle Tennessee":["2-2",null],"Minnesota":["3-1",null],"Mississippi State":["4-0",16],"Missouri":["3-1",25],"Missouri State":["1-3",null],"NC State":["2-2",null],"Navy":["1-2",null],"Nebraska":["4-0",null],"New Mexico State":["1-3",null],"North Carolina":["2-1",null],"North Dakota State":["4-0",null],"North Texas":["2-2",null],"Northern Illinois":["0-4",null],"Northwestern":["2-1",null],"Notre Dame":["4-0",3],"Ohio State":["3-1",5],"Oklahoma":["2-2",null],"Oklahoma State":["3-1",19],"Ole Miss":["3-1",9],"Oregon":["3-1",15],"Oregon State":["2-2",null],"Penn State":["3-1",null],"Pitt":["4-0",null],"Purdue":["1-3",null],"Rutgers":["1-3",null],"SMU":["3-1",21],"Sam Houston":["1-3",null],"San Diego State":["1-3",null],"San Jose State":["2-2",null],"South Alabama":["2-2",null],"South Carolina":["2-2",null],"Southern Miss":["1-3",null],"Stanford":["2-2",null],"Syracuse":["1-2",null],"TCU":["2-2",null],"Temple":["1-3",null],"Tennessee":["3-1",17],"Texas":["4-0",1],"Texas A&M":["2-2",null],"Texas State":["2-2",null],"Texas Tech":["4-0",12],"Troy":["2-2",null],"Tulane":["2-2",null],"Tulsa":["3-1",null],"UAB":["2-2",null],"UCF":["3-1",null],"UCLA":["4-0",23],"UConn":["2-2",null],"UNLV":["2-2",null],"USC":["4-1",18],"USF":["4-0",null],"UTSA":["3-1",null],"Utah":["4-0",13],"Utah State":["1-3",null],"Vanderbilt":["3-1",null],"Virginia":["3-1",null],"Virginia Tech":["4-0",null],"WKU":["1-3",null],"Wake Forest":["3-1",null],"Washington":["3-1",null],"Washington State":["1-3",null],"West Virginia":["3-1",null],"Wisconsin":["3-1",null],"Wyoming":["2-2",null],"Charlotte":["0-4",null],"East Carolina":["2-2",null],"Old Dominion":["1-3",null],"UMass":["4-0",null]}};
 const R_ASOF="NFL records after Week 3, AP poll of Sep 27, 2026";
-const LEAGUE={nfl:"NFL",ncaa:"College",golf:"Golf",nascar:"NASCAR",f1:"F1"};
+const LEAGUE={nfl:"NFL",ncaa:"College",nba:"NBA",golf:"Golf",nascar:"NASCAR",f1:"F1"};
+const NBA_CITY={"Hawks":"Atlanta","Celtics":"Boston","Nets":"Brooklyn","Hornets":"Charlotte","Bulls":"Chicago","Cavaliers":"Cleveland Cavs","Mavericks":"Dallas Mavs","Nuggets":"Denver","Pistons":"Detroit","Warriors":"Golden State","Rockets":"Houston","Pacers":"Indiana","Clippers":"Los Angeles LA","Lakers":"Los Angeles LA","Grizzlies":"Memphis","Heat":"Miami","Bucks":"Milwaukee","Timberwolves":"Minnesota Wolves","Pelicans":"New Orleans","Knicks":"New York","Thunder":"Oklahoma City OKC","Magic":"Orlando","76ers":"Philadelphia Sixers","Suns":"Phoenix","Trail Blazers":"Portland Blazers","Kings":"Sacramento","Spurs":"San Antonio","Raptors":"Toronto","Jazz":"Utah","Wizards":"Washington"};
+const two=lg=>lg==="nfl"||lg==="ncaa"||lg==="nba";
+const cityOf=(lg,t)=>lg==="nfl"?(CITY[t]||""):lg==="nba"?(NBA_CITY[t]||""):"";
 const GTOUR={pga:"PGA Tour",liv:"LIV Golf"};
 // NFL nickname -> city, so "Cleveland" finds the Browns
 const CITY={"Bears":"Chicago","Bengals":"Cincinnati","Bills":"Buffalo","Broncos":"Denver","Browns":"Cleveland","Buccaneers":"Tampa Bay Bucs","Cardinals":"Arizona","Chargers":"Los Angeles LA","Chiefs":"Kansas City KC","Colts":"Indianapolis Indy","Commanders":"Washington","Cowboys":"Dallas","Dolphins":"Miami","Eagles":"Philadelphia Philly","Falcons":"Atlanta","49ers":"San Francisco Niners SF","Giants":"New York NY","Jaguars":"Jacksonville Jags","Jets":"New York NY","Lions":"Detroit","Packers":"Green Bay","Panthers":"Carolina","Patriots":"New England Pats","Raiders":"Las Vegas","Rams":"Los Angeles LA","Ravens":"Baltimore","Saints":"New Orleans","Seahawks":"Seattle","Steelers":"Pittsburgh","Texans":"Houston","Titans":"Tennessee","Vikings":"Minnesota"};
 const games=G.map(([iso,dur,lg,ev,note,net],i)=>{
   const start=new Date(iso),end=new Date(start.getTime()+dur*60000);
   const teams=ev.replace(/\(.*?\)/g,"").split(/\s+(?:at|vs\.)\s+/).map(s=>s.trim());
-  const extra=lg==="nfl"?teams.map(t=>CITY[t]||"").join(" "):"";
-  return {i,iso,start,end,lg,ev,note,net,teams:lg==="nfl"||lg==="ncaa"?teams:[ev],
+  const extra=teams.map(t=>cityOf(lg,t)).join(" ");
+  return {i,iso,start,end,lg,ev,note,net,teams:two(lg)?teams:[ev],
     hay:(ev+" "+note+" "+net+" "+extra+" "+LEAGUE[lg]).toLowerCase()};
 });
 const P_ASOF="Results: Aug 29 to Sep 28, 2026 (NASCAR and F1 show the winner, tap for top 10; college results cover games involving teams in this app)";
@@ -333,11 +339,11 @@ function hl(text,q){
   return i<0?esc(text):esc(text.slice(0,i))+"<mark>"+esc(text.slice(i,i+q.length))+"</mark>"+esc(text.slice(i+q.length));
 }
 // Live scores and game clock: read straight from ESPN's scoreboard every 30 seconds, only while a game is on
-const LIVE=new Map(),LIVE_MS=30000,SB="https://site.api.espn.com/apis/site/v2/sports/football/";
+const LIVE=new Map(),LIVE_MS=30000,SB="https://site.api.espn.com/apis/site/v2/sports/",SBP={nfl:"football/nfl",ncaa:"football/college-football",nba:"basketball/nba"};
 const LALIAS={"Massachusetts":"UMass","Connecticut":"UConn","Hawai'i":"Hawaii","San José State":"San Jose State","App State":"Appalachian State"};
 const lkey=g=>g.lg+"|"+[...g.teams].sort().join("/");
 function liveOf(g){
-  if(g.fin||g.teams.length!==2||(g.lg!=="nfl"&&g.lg!=="ncaa"))return null;
+  if(g.fin||g.teams.length!==2||!two(g.lg))return null;
   const x=LIVE.get(lkey(g));
   if(!x||Math.abs(x.t-g.start.getTime())>30*36e5)return null;
   if(x.st==="in"&&Date.now()-x.at>3*6e4)return null; // stale: go back to showing the kickoff time
@@ -346,7 +352,7 @@ function liveOf(g){
 function liveWanted(now){
   const t=now.getTime();
   return games.filter(g=>{
-    if(g.fin||g.hide||g.teams.length!==2||(g.lg!=="nfl"&&g.lg!=="ncaa"))return false;
+    if(g.fin||g.hide||g.teams.length!==2||!two(g.lg))return false;
     if(t<g.start.getTime()-10*6e4||t>g.end.getTime()+90*6e4)return false;
     const x=liveOf(g);return !(x&&(x.st==="post"||x.st==="off"));
   });
@@ -371,7 +377,7 @@ async function pollLive(){
     await Promise.all([...jobs].map(async([k,gs])=>{
       const [lg,day]=k.split("|");
       try{
-        const r=await fetch(SB+(lg==="nfl"?"nfl":"college-football")+"/scoreboard?dates="+day+(lg==="ncaa"?"&groups=80&limit=300":""),{cache:"no-store"});
+        const r=await fetch(SB+SBP[lg]+"/scoreboard?dates="+day+(lg==="ncaa"?"&groups=80&limit=300":""),{cache:"no-store"});
         if(!r.ok)return;
         const j=await r.json();
         (j.events||[]).forEach(ev=>{
@@ -380,7 +386,7 @@ async function pollLive(){
           (c.competitors||[]).forEach(x=>{
             const t=x.team||{},loc=t.location||"";
             side[x.homeAway]={id:t.id,score:parseInt(x.score,10)||0,
-              names:(lg==="nfl"?[t.name,t.shortDisplayName]:[loc,LALIAS[loc],loc.replace(/\s*\(.*?\)/g,""),t.shortDisplayName]).filter(Boolean)};
+              names:(lg!=="ncaa"?[t.name,t.shortDisplayName]:[loc,LALIAS[loc],loc.replace(/\s*\(.*?\)/g,""),t.shortDisplayName]).filter(Boolean)};
           });
           if(!side.home||!side.away)return;
           const who=n=>side.away.names.includes(n)?"away":side.home.names.includes(n)?"home":"";
@@ -489,6 +495,7 @@ function render(){
     if(words.length&&!words.every(w=>g.hay.includes(w)))return;
     if(g.fin||g.end<now){pastN++;if(showPast)fin.push(g);return}
     if((g.lg==="nfl"||g.lg==="ncaa")&&g.start.getTime()>horizon)return;
+    if(g.lg==="nba"&&g.start.getTime()>now.getTime()+14*864e5)return;
     up.push(g);
   });
   fin.sort((x,y)=>x.start-y.start);
@@ -527,7 +534,7 @@ function abbr(t){
   return w.map(x=>x[0]).join("").slice(0,3).toUpperCase();
 }
 function pillText(g){
-  if(g.lg==="nfl"||g.lg==="ncaa"){
+  if(two(g.lg)){
     const neutral=/ vs\. /.test(g.ev);
     return abbr(g.teams[0])+"\n"+(neutral?"v ":"@")+abbr(g.teams[1]);
   }
@@ -677,8 +684,8 @@ function applySched(rows){
     const k=iso+"|"+ev;
     if(orig||appliedNew.has(k)||by.has(k))return;
     appliedNew.add(k);
-    const teams=lg==="nfl"||lg==="ncaa"?ev.replace(/\(.*?\)/g,"").split(/\s+(?:at|vs\.)\s+/).map(x=>x.trim()):[ev];
-    const extra=lg==="nfl"?teams.map(t=>CITY[t]||"").join(" "):"";
+    const teams=two(lg)?ev.replace(/\(.*?\)/g,"").split(/\s+(?:at|vs\.)\s+/).map(x=>x.trim()):[ev];
+    const extra=teams.map(t=>cityOf(lg,t)).join(" ");
     const ng={i:games.length,iso,start,end:new Date(start.getTime()+dur*60000),lg,sub:sub||"cup",ev,note:note||"",net:net||"",teams,k0:k,
       hay:(ev+" "+(note||"")+" "+(net||"")+" "+extra+" "+LEAGUE[lg]+" "+(sub?SUBS[sub]||"":"")).toLowerCase()};
     games.push(ng);
@@ -712,7 +719,7 @@ function applyGolf(rows){
 }
 function applyData(dj){
   if(!dj)return;
-  if(dj.R)["nfl","ncaa"].forEach(lg=>Object.entries(dj.R[lg]||{}).forEach(([t,v])=>{(R[lg]=R[lg]||{})[t]=v}));
+  if(dj.R)["nfl","ncaa","nba"].forEach(lg=>Object.entries(dj.R[lg]||{}).forEach(([t,v])=>{(R[lg]=R[lg]||{})[t]=v}));
   applySched(dj.sched);
   if(dj.spreads)Object.assign(SP,dj.spreads);
   applyRaces(dj.races);
@@ -725,7 +732,7 @@ function applyData(dj){
     have.add(k);
     const ev=/neutral/i.test(note)?a+" vs. "+h:a+" at "+h;
     games.push({i:games.length,iso:start.toISOString(),start,end:start,lg,ev,note:note+(ot?(note?" · ":"")+"OT":""),net:"",fin:true,
-      res:{as,hs,ot,ar,hr},teams:[a,h],sub:"cup",hay:(ev+" "+note+" final result score "+LEAGUE[lg]).toLowerCase()});
+      res:{as,hs,ot,ar,hr},teams:[a,h],sub:"cup",hay:(ev+" "+note+" final result score "+[a,h].map(x=>cityOf(lg,x)).join(" ")+" "+LEAGUE[lg]).toLowerCase()});
   });
   liveStamp=dj.updated||"";
   if(liveStamp)$("updated").textContent="Updated "+liveStamp.replace(/, \d{4}/,"");
@@ -804,7 +811,7 @@ document.addEventListener("visibilitychange",()=>{
 // Share button: native share sheet when available, otherwise copy the link
 $("share").addEventListener("click",async()=>{
   const url=location.origin+location.pathname,b=$("share");
-  try{if(navigator.share){await navigator.share({title:"Game Finder",text:"NFL, college football, NASCAR and F1 times and channels",url});return}}catch(e){if(e&&e.name==="AbortError")return}
+  try{if(navigator.share){await navigator.share({title:"Game Finder",text:"NFL, college football, NBA, NASCAR and F1 times and channels",url});return}}catch(e){if(e&&e.name==="AbortError")return}
   try{await navigator.clipboard.writeText(url);b.textContent="Link copied";setTimeout(()=>b.textContent="Share",2000)}
   catch(e){window.prompt("Copy this link:",url)}
 });
