@@ -163,6 +163,19 @@ NATIONAL_OK = {"ABC", "CBS", "NBC / Peacock", "NBC", "FOX", "ESPN", "ESPN2", "ES
                "ACC Network", "CBS Sports Network", "The CW", "TNT / truTV", "USA Network", "ESPN / ABC"}
 
 FOX_FIX = re.compile(r"\bFox\b")
+RANKED = {}  # AP rank by college team, filled before the schedule sync
+TBD_NOTE = "Kickoff time TBD"
+
+def tbd_row(e, lg):
+    """ESPN has no kickoff time yet. Still list NFL games and games with an AP-ranked team in the next 8 days, as 'TBD'."""
+    d = parse_dt(e["iso"]).date()
+    today = datetime.now(ET).date()
+    if lg not in ("nfl", "ncaa") or not (today <= d <= today + timedelta(days=8)):
+        return None
+    if lg == "ncaa" and not any(RANKED.get(x) for x in (e["away"], e["home"])):
+        return None
+    ev = e["away"] + (" vs. " if e["neutral"] else " at ") + e["home"]
+    return ["", datetime(d.year, d.month, d.day, 12, 0, tzinfo=ET).isoformat(), {"nfl": 195}.get(lg, 210), lg, ev, TBD_NOTE, "", ""]
 
 def placeholder(iso):
     """ESPN uses 00:00 / 23:59 ET when the real kickoff time is not set yet."""
@@ -195,11 +208,11 @@ def sync_football(lg, slug, days, names, static_rows, base=FB):
             if new_iso != g[0] or new_net != g[5]:
                 return [g[0] + "|" + g[3], new_iso, g[1], lg, g[3], g[4], new_net, ""]
             return None
-        if placeholder(e["iso"]):
-            return None
         # a game the app does not have yet (skip it if a team already has a game that day under another spelling)
         if any((t, parse_dt(e["iso"]).date()) in have_day for t in teams):
             return None
+        if placeholder(e["iso"]):
+            return tbd_row(e, lg)
         if lg == "ncaa":
             net = FOX_FIX.sub("FOX", net)  # ESPN spells it "Fox"; the allowlist and static rows use "FOX"
             if not (is_tv and net in NATIONAL_OK):
@@ -471,8 +484,9 @@ def main():
 
     sched = old.get("sched", [])
     sched_at = old.get("schedAt", "")
-    if older("schedAt", 2.9) or "nba2" not in old.get("schedLg", []):  # also runs once to pick up a newly added league
+    if older("schedAt", 2.9) or "nba2" not in old.get("schedLg", []) or "tbd" not in old.get("schedLg", []):  # also runs once to pick up a newly added league
         base_rows = G
+        RANKED.update(ap_ranks(names)[0])
         new = []
         new += sync_football("nfl", "nfl", 100, names, base_rows)
         new += sync_football("ncaa", "college-football", 45, names, base_rows)
@@ -542,7 +556,7 @@ def main():
         ERRORS.append("golf: " + repr(e)[:80])
         golf = old.get("golf", [])
 
-    data = dict(updated=stamp(), schedAt=sched_at, schedLg=["nba2"], sched=sched, finals=finals, spreads=spreads, R=R, races=races, golf=golf,
+    data = dict(updated=stamp(), schedAt=sched_at, schedLg=["nba2", "tbd"], sched=sched, finals=finals, spreads=spreads, R=R, races=races, golf=golf,
                 stats=dict(events=len(evs), matched=len(matched), finals=len(finals), spreads=len(spreads), sched=len(sched),
                            races=len(races), golf=len(golf), poll=poll), errors=ERRORS[:12])
     json.dump(names, open(npath, "w"), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
