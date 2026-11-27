@@ -35,6 +35,7 @@ html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.35;-webkit-tap-highlight-color:transparent}
 .app{max-width:560px;margin:0 auto}
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-inline:16px;padding-block:14px 16px;border-bottom:0}
+body.calv header{position:static}
 header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:8px;background:repeating-conic-gradient(var(--fg) 0 25%,var(--bg) 0 50%) 0 0/16px 16px;opacity:.85}
 .brand{display:flex;align-items:center;gap:10px}
 .brand svg{width:34px;height:34px;flex:none}
@@ -506,6 +507,7 @@ function render(){
   const rc=filter==="nascar"||filter==="f1",unit=rc?"race":filter==="golf"?"tournament":"game";
   $("count").textContent=up.length+" "+unit+(up.length===1?"":"s");
   let html="";
+  document.body.classList.toggle("calv",view==="cal");
   if(view==="cal"){
     $("list").innerHTML=calHtml([...fin,...up],now);anchorPending=false;
     if(modalIds)paintModal();
@@ -549,7 +551,7 @@ function calHtml(list,now){
   const base=new Date(Date.UTC(parts[0],parts[1]-1,parts[2]));
   base.setUTCDate(base.getUTCDate()-base.getUTCDay());
   const by={};list.forEach(g=>{const k=dayKey(g.start);(by[k]=by[k]||[]).push(g)});
-  const MAXP=4;
+  const MAXP=3;
   let h='<div class="cal"><table><thead><tr>'+["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>`<th>${d}</th>`).join("")+'</tr></thead><tbody>';
   for(let w=0;w<2;w++){
     h+='<tr>';
@@ -656,7 +658,7 @@ document.querySelectorAll(".vb").forEach(b=>b.addEventListener("click",()=>{
   view=b.dataset.v;closeModal();
   document.querySelectorAll(".vb").forEach(x=>x.setAttribute("aria-pressed",x===b));
   $("past").hidden=true;anchorPending=view==="list";render();
-  if(view==="cal")window.scrollTo(0,0);
+  if(view==="cal")requestAnimationFrame(()=>{const c=document.querySelector(".cal");window.scrollTo(0,c?Math.max(0,Math.round(c.getBoundingClientRect().top+window.scrollY-10)):0)});
 }));
 document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
   filter=c.dataset.f;try{localStorage.setItem("filter",filter)}catch(e){}
